@@ -820,13 +820,13 @@ export default function Home() {
             </div>
             
             {/* 바디 */}
-            <div className="p-6 space-y-6 max-h-[480px] overflow-y-auto no-scrollbar">
+            <div className="p-6 space-y-6 max-h-[480px] overflow-y-auto no-scrollbar font-sans">
               
               {/* 설명 */}
-              <div className="space-y-1">
-                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Scoring Framework</p>
-                <p className="text-xs text-gray-700 leading-relaxed font-medium">
-                  GuardTerms 취약도 점수는 사용자가 약관에 가입할 때 노출되는 개인정보 유출 및 권리 침해 요소를 수치화한 지표입니다. 점수가 낮을수록 개인정보 주권이 더 잘 보호되고 있음을 의미합니다.
+              <div className="space-y-1.5">
+                <p className="text-xs text-blue-toss font-extrabold uppercase tracking-wider">Scoring Ground Truth</p>
+                <p className="text-xs text-gray-700 leading-relaxed font-semibold">
+                  GuardTerms 취약도 점수는 **개인정보보호위원회(PIPC)**의 개인정보 처리방침 평가 기준, **공정거래위원회(KFTC)**의 분야별 표준약관 및 불공정 심결례, 그리고 **한국인터넷진흥원(KISA)**의 최근 개인정보 침해사고 동향 보고서 등 공신력 있는 공공기관 가이드라인을 근거로 삼아, 사용자의 개인정보 노출 및 권리 침해 요소를 공정하게 수치화한 신뢰도 지표입니다.
                 </p>
               </div>
 
@@ -841,8 +841,8 @@ export default function Home() {
                     <span>서비스별 상이 (25 ~ 98점)</span>
                   </div>
                   <div className="flex justify-between text-green-safe">
-                    <span>선택 약관 해제에 따른 차감 점수</span>
-                    <span>개별 항목당 -10 ~ -28점</span>
+                    <span>선택/필수 약관 해제에 따른 차감 점수</span>
+                    <span>개별 항목당 -8 ~ -28점</span>
                   </div>
                   <div className="pt-1.5 flex justify-between text-blue-toss font-extrabold border-t border-blue-toss/20">
                     <span>최종 취약도 점수</span>
@@ -869,7 +869,7 @@ export default function Home() {
                         <span className="text-[10px] font-bold text-green-safe bg-green-safe-light px-1.5 py-0.2 rounded-md">0 ~ 35점</span>
                       </div>
                       <p className="text-[11px] text-gray-700 leading-relaxed font-medium">
-                        개인정보 수집 범위가 필수적인 서비스 기능에 한정되며, 무단 제3자 제공이나 실시간 동선 추적과 같은 심각한 프라이버시 침해 조항이 전혀 없거나 전부 차단된 가장 안전한 상태입니다.
+                        개인정보보호위원회(PIPC)의 목적 외 과도한 정보 수집 제한 지침 및 최소 수집 원칙을 충실히 준수하는 상태입니다. 외부 제3자 무단 제공이나 GPS 실시간 동선 추적과 같이 스미싱/개인정보 오남용 우려가 큰 침해 조항이 차단된 최고 등급의 보안 상태입니다.
                       </p>
                     </div>
                   </div>
