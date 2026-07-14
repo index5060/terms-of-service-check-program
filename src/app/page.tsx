@@ -19,12 +19,14 @@ import {
   Info, 
   AlertTriangle,
   Lock,
-  ArrowLeft,
   Globe,
   Sparkles,
   Search,
   CheckCircle,
-  HelpCircle
+  HelpCircle,
+  Smartphone,
+  Wifi,
+  Battery
 } from "lucide-react";
 
 export default function Home() {
@@ -33,23 +35,17 @@ export default function Home() {
   
   // 2. 동의한 약관 ID 목록 관리
   const [agreedTermIds, setAgreedTermIds] = useState<Record<string, boolean>>({});
-
-  // 3. 확장 프로그램 사이드바 오픈 여부
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
-  // 4. 가입 완료 상태
+  // 3. 가입 완료 상태
   const [isSignupComplete, setIsSignupComplete] = useState(false);
 
-  // 5. 약관 세부정보 모달에 노출할 약관 객체
+  // 4. 약관 세부정보 모달
   const [detailTerm, setDetailTerm] = useState<Term | null>(null);
 
-  // 6. 위험 조항 상세 현미경 분석 모달에 노출할 위험 객체
+  // 5. 위험 조항 상세 현미경 분석 모달
   const [detailRisk, setDetailRisk] = useState<RiskFactor | null>(null);
 
-  // 7. 확장 프로그램 설치 안내 모달 상태
-  const [showWelcomeMsg, setShowWelcomeMsg] = useState(true);
-
-  // 8. 위험도 점수 산정 기준 모달 상태
+  // 6. 위험도 점수 산정 기준 모달
   const [showCriteriaModal, setShowCriteriaModal] = useState(false);
 
   // 시나리오 변경 시 초기 세팅
@@ -59,17 +55,21 @@ export default function Home() {
       initialAgreed[term.id] = true; // 기본적으로 모든 약관 동의로 시작하여 위험 감지를 체감하게 유도
     });
     setAgreedTermIds(initialAgreed);
-    setIsSidebarOpen(true);
     setIsSignupComplete(false);
     setDetailTerm(null);
     setDetailRisk(null);
     setShowCriteriaModal(false);
   }, [currentScenario]);
 
-  // 체크박스 클릭 핸들러
+  // 체크박스 클릭 핸들러 (모바일 약관 동의 토글)
   const handleTermToggle = (termId: string) => {
     const term = currentScenario.terms.find(t => t.id === termId);
     if (!term) return;
+    
+    if (term.required && agreedTermIds[termId]) {
+      alert("필수 약관은 가입을 위해 반드시 동의해야 합니다.");
+      return;
+    }
 
     setAgreedTermIds(prev => ({
       ...prev,
@@ -92,7 +92,7 @@ export default function Home() {
     setAgreedTermIds(nextAgreed);
   };
 
-  // 실시간 위험 점수 계산 로직
+  // 실시간 위험 점수 계산
   const calculateScore = () => {
     let score = currentScenario.baseScore;
     currentScenario.terms.forEach(term => {
@@ -114,7 +114,7 @@ export default function Home() {
 
   const riskInfo = getRiskLevel(currentScore);
 
-  // 독소 조항 형광펜 하이라이팅 렌더러
+  // 독소 조항 형광펜 하이라이팅
   const renderHighlightedText = (fullText: string, highlightText: string) => {
     if (!highlightText) return <span>{fullText}</span>;
     const parts = fullText.split(highlightText);
@@ -132,39 +132,39 @@ export default function Home() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#F2F4F6] relative overflow-x-hidden">
+    <div className="flex-1 flex flex-col min-h-screen bg-[#F2F4F6] relative overflow-x-hidden font-sans">
       
-      {/* 1. 상단 GNB 및 시나리오 스위처 */}
-      <header className="bg-white border-b border-gray-150 py-3 px-6 sticky top-0 z-40 shadow-2xs">
+      {/* 1. GNB 및 시나리오 스위처 */}
+      <header className="bg-white border-b border-gray-150 py-3.5 px-6 sticky top-0 z-45 shadow-3xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-blue-toss flex items-center justify-center text-white shadow-xs">
-              <Globe size={20} />
+              <Smartphone size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-base text-gray-900 tracking-tight">GuardTerms</span>
-                <span className="text-[10px] text-blue-toss font-bold bg-blue-toss-light px-2 py-0.5 rounded-md">
-                  Extension Prototype
+                <span className="font-extrabold text-base text-gray-900 tracking-tight">GuardTerms Mobile</span>
+                <span className="text-[10px] text-blue-toss font-bold bg-blue-toss-light px-2.5 py-0.5 rounded-md">
+                  App SDK Simulator
                 </span>
               </div>
-              <p className="text-[10px] text-gray-500 font-medium">크롬 확장 프로그램 시뮬레이터</p>
+              <p className="text-[10px] text-gray-500 font-semibold">실제 모바일 앱 약관 동의 시뮬레이터</p>
             </div>
           </div>
 
-          {/* 시나리오 전환기 */}
-          <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto max-w-md">
+          {/* 앱 전환 스위처 */}
+          <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto max-w-lg">
             {SCENARIOS.map((sc) => {
               const isActive = currentScenario.id === sc.id;
               return (
                 <button
                   key={sc.id}
                   onClick={() => setCurrentScenario(sc)}
-                  className={`flex-1 sm:flex-none py-1.5 px-3 sm:px-4 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all duration-200 ${
+                  className={`flex-1 sm:flex-none py-1.5 px-3 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                     isActive 
                       ? "bg-white text-blue-toss shadow-xs" 
-                      : "text-gray-700 hover:text-gray-900"
+                      : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   <span>{sc.emoji}</span>
@@ -174,7 +174,7 @@ export default function Home() {
             })}
           </div>
 
-          {/* 리셋 단추 */}
+          {/* 초기화 버튼 */}
           <button 
             onClick={() => {
               const initialAgreed: Record<string, boolean> = {};
@@ -183,133 +183,117 @@ export default function Home() {
               });
               setAgreedTermIds(initialAgreed);
               setIsSignupComplete(false);
-              setIsSidebarOpen(true);
             }}
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
           >
             <RefreshCw size={12} />
-            시나리오 초기화
+            동의 초기화
           </button>
         </div>
       </header>
 
       {/* 안내 알림 바 */}
-      {showWelcomeMsg && (
-        <div className="bg-blue-toss text-white py-2.5 px-6 relative z-30 flex items-center justify-between text-xs font-semibold shadow-xs">
-          <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Sparkles size={14} className="animate-spin" />
-              <span>확장 프로그램 데모: 우측의 위험 감지 조항 카드 옆에 추가된 [돋보기/자세히 보기] 버튼을 클릭해 실제 위협 조항의 형광펜 분석을 확인해보세요.</span>
-            </span>
-            <button onClick={() => setShowWelcomeMsg(false)} className="hover:opacity-75 pl-4">
-              <X size={14} />
-            </button>
-          </div>
+      <div className="bg-blue-toss text-white py-2.5 px-6 relative z-30 flex items-center text-xs font-semibold shadow-xs">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Sparkles size={14} className="animate-pulse" />
+            <span>모바일 디바이스 내부의 체크박스를 해제하면 우측 SDK 분석판에서 실시간으로 감점 및 등급이 갱신됩니다.</span>
+          </span>
         </div>
-      )}
+      </div>
 
-      {/* 2. 메인 컨텐츠 영역 (좌측: 웹 페이지 전체 가입 양식, 우측: 확장 프로그램 사이드바) */}
-      <div className={`flex-1 flex w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 transition-all duration-300 ${isSidebarOpen ? "pr-[400px]" : "pr-4"}`}>
+      {/* 2. 메인 화면 구성 (중앙: 가상 스마트폰 디바이스 목업, 우측: 분석기 SDK 대시보드) */}
+      <div className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row justify-center items-stretch gap-8">
         
-        {/* [좌] 가상 웹 회원가입 페이지 */}
-        <main className="flex-1 bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[680px]">
-          
-          {/* 가상 브라우저 상단 주소창 띠 */}
-          <div className="bg-gray-50 border-b border-gray-150 py-3 px-6 flex items-center gap-3">
-            <div className="flex gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-red-danger/40 inline-block"></span>
-              <span className="w-3 h-3 rounded-full bg-yellow-warn/40 inline-block"></span>
-              <span className="w-3 h-3 rounded-full bg-green-safe/40 inline-block"></span>
+        {/* [좌/중앙] 가상 스마트폰 디바이스 목업 (iPhone 스타일) */}
+        <div className="flex-1 flex justify-center items-center py-4">
+          <div className="relative w-[360px] h-[720px] bg-white border-[10px] border-gray-900 rounded-[50px] shadow-2xl overflow-hidden flex flex-col shrink-0 select-none">
+            
+            {/* 폰 상단 데코레이션 (다이내믹 아일랜드 / 수화기) */}
+            <div className="absolute top-0 left-0 right-0 h-9 bg-transparent z-40 flex justify-between items-center px-6">
+              <span className="text-[11px] font-bold text-gray-600">16:19</span>
+              <div className="w-[100px] h-5 bg-black rounded-full flex items-center justify-center">
+                <span className="w-2.5 h-2.5 rounded-full bg-gray-800 absolute left-[138px]"></span>
+              </div>
+              <div className="flex items-center gap-1.5 text-gray-600">
+                <Wifi size={11} strokeWidth={2.5} />
+                <Battery size={13} strokeWidth={2.5} />
+              </div>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg px-4 py-1.5 text-xs text-gray-500 font-medium flex-1 max-w-lg flex items-center gap-1.5">
-              <Lock size={12} className="text-green-safe" />
-              <span>https://www.</span>
-              <span className="text-gray-900 font-bold">{currentScenario.title.toLowerCase()}</span>
-              <span>.com/signup</span>
-            </div>
-            <span className="text-[10px] text-gray-400 font-semibold bg-gray-200 px-2 py-0.5 rounded-xs">가상 페이지</span>
-          </div>
 
-          {/* 가상 가입 화면 콘텐츠 */}
-          <div className="flex-1 p-8 sm:p-12 max-w-2xl mx-auto w-full flex flex-col justify-between">
+            {/* 모바일 앱 바디 콘텐츠 */}
             {!isSignupComplete ? (
-              <div className="space-y-8">
+              <div className="flex-1 pt-9 flex flex-col justify-between bg-white h-full">
                 
-                {/* 헤더 */}
-                <div className="space-y-3">
-                  <span className="text-xl">{currentScenario.emoji}</span>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
-                    {currentScenario.title} 회원가입
-                  </h2>
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    회원 정보를 기입하고 아래 약관에 동의하여 가입 절차를 마무리해 주세요.
+                {/* 앱 상단 헤더 */}
+                <div 
+                  className="py-4.5 px-5 flex flex-col justify-center items-center shadow-xs shrink-0 relative"
+                  style={{ backgroundColor: currentScenario.brandColor }}
+                >
+                  {/* 가상 뒤로가기 버튼 */}
+                  <span className="absolute left-4 text-xs font-bold text-white opacity-85">〈</span>
+                  <h3 className={`font-black text-sm tracking-widest ${currentScenario.textColor}`}>
+                    {currentScenario.title}
+                  </h3>
+                  <p className={`text-[9px] opacity-75 font-semibold mt-0.5 ${currentScenario.textColor}`}>
+                    {currentScenario.category}
                   </p>
                 </div>
 
-                {/* 계정 정보 폼 */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* 약관 리스트 본문 (스크롤) */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-5 no-scrollbar bg-gray-50/50">
+                  
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-700">아이디 (이메일)</label>
-                    <input 
-                      type="email" 
-                      placeholder="example@domain.com" 
-                      disabled
-                      value={currentScenario.id === "sns" ? "designer@toss.im" : "buyer@easy.co.kr"}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-700 focus:outline-none"
-                    />
+                    <h4 className="text-sm font-extrabold text-gray-900">약관 동의 및 가입</h4>
+                    <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
+                      서비스 가입 및 이용을 위해 아래 약관 내용을 확인하고 동의해주시기 바랍니다.
+                    </p>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-700">비밀번호</label>
-                    <input 
-                      type="password" 
-                      disabled
-                      value="password1234"
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:outline-none"
-                    />
-                  </div>
-                </div>
 
-                {/* 약관 동의 폼 영역 */}
-                <div className="space-y-4 border border-gray-150 rounded-2xl p-5 bg-gray-50/50">
-                  <div className="border-b border-gray-150 pb-4 mb-4 flex items-center justify-between">
-                    <span className="font-extrabold text-sm text-gray-900">이용 약관 및 필수/선택 동의</span>
-                    <button 
-                      onClick={handleSelectAll}
-                      className="text-xs font-bold text-blue-toss hover:text-blue-toss-dark transition-colors"
-                    >
-                      {currentScenario.terms.every(term => agreedTermIds[term.id]) ? "전체 해제" : "전체 동의"}
-                    </button>
+                  {/* 전체 동의 컴포넌트 */}
+                  <div 
+                    onClick={handleSelectAll}
+                    className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3.5 shadow-3xs cursor-pointer active:scale-[0.99] transition-transform"
+                  >
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${
+                      currentScenario.terms.every(term => agreedTermIds[term.id])
+                        ? "bg-blue-toss border-blue-toss text-white"
+                        : "border-gray-200 text-transparent"
+                    }`}>
+                      <Check size={11} strokeWidth={3.5} />
+                    </div>
+                    <span className="text-[11px] font-black text-gray-900">약관 전체 동의 (선택 포함)</span>
                   </div>
 
                   {/* 약관 리스트 */}
-                  <div className="space-y-3.5">
+                  <div className="space-y-2.5">
                     {currentScenario.terms.map((term) => {
                       const isChecked = !!agreedTermIds[term.id];
                       return (
-                        <div key={term.id} className="flex items-center justify-between bg-white border border-gray-150 rounded-xl p-3.5 shadow-2xs">
+                        <div key={term.id} className="flex items-center justify-between bg-white border border-gray-150 rounded-xl p-3 shadow-3xs">
                           <div 
                             onClick={() => handleTermToggle(term.id)}
-                            className="flex items-start gap-3 flex-1 cursor-pointer select-none"
+                            className="flex items-start gap-2.5 flex-1 cursor-pointer select-none"
                           >
-                            <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center border mt-0.5 transition-all ${
+                            <div className={`w-4.5 h-4.5 rounded-full flex items-center justify-center border mt-0.5 transition-all ${
                               isChecked
                                 ? "bg-blue-toss border-blue-toss text-white"
                                 : "border-gray-200 text-transparent"
                             }`}>
-                              <Check size={12} strokeWidth={3} />
+                              <Check size={10} strokeWidth={3.5} />
                             </div>
                             <div className="flex flex-col">
                               <div className="flex items-center gap-1.5">
-                                <span className={`text-xs font-bold ${term.required ? "text-gray-900" : "text-gray-700"}`}>
+                                <span className={`text-[10px] font-bold ${term.required ? "text-gray-900" : "text-gray-700"}`}>
                                   {term.title}
                                 </span>
                                 {term.required ? (
-                                  <span className="text-[9px] font-bold bg-red-danger-light text-red-danger px-1 rounded-sm">필수</span>
+                                  <span className="text-[8px] font-bold bg-red-danger-light text-red-danger px-1 rounded-sm">필수</span>
                                 ) : (
-                                  <span className="text-[9px] font-bold bg-gray-200 text-gray-700 px-1 rounded-sm">선택</span>
+                                  <span className="text-[8px] font-bold bg-gray-200 text-gray-700 px-1 rounded-sm">선택</span>
                                 )}
                               </div>
-                              <span className="text-[10px] text-gray-700 mt-1">
+                              <span className="text-[9px] text-gray-400 mt-0.5 line-clamp-1 leading-snug">
                                 {term.description}
                               </span>
                             </div>
@@ -317,9 +301,8 @@ export default function Home() {
 
                           <button 
                             onClick={() => setDetailTerm(term)}
-                            className="text-gray-700 hover:bg-gray-100 p-2 rounded-lg transition-colors flex items-center gap-1 text-[10px] font-bold shrink-0"
+                            className="text-gray-500 hover:bg-gray-100 p-1.5 rounded-lg transition-colors flex items-center text-[9px] font-bold shrink-0"
                           >
-                            <span>약관 보기</span>
                             <ChevronRight size={14} />
                           </button>
                         </div>
@@ -328,336 +311,329 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* 가입 버튼 */}
-                <button
-                  onClick={() => {
-                    setIsSignupComplete(true);
-                  }}
-                  className="w-full bg-blue-toss hover:bg-blue-toss-dark text-white font-extrabold py-4 rounded-xl text-sm transition-all shadow-xs active:scale-[0.99] select-none"
-                >
-                  동의하고 회원가입 완료
-                </button>
+                {/* 하단 고정 버튼 영역 */}
+                <div className="p-4 bg-white border-t border-gray-150 shrink-0">
+                  <button
+                    onClick={() => {
+                      const hasRequired = currentScenario.terms.filter(t => t.required).every(t => agreedTermIds[t.id]);
+                      if (!hasRequired) {
+                        alert("가입하려면 모든 필수 약관에 동의하셔야 합니다.");
+                        return;
+                      }
+                      setIsSignupComplete(true);
+                    }}
+                    className="w-full text-white font-extrabold py-3.5 rounded-xl text-[12px] transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+                    style={{ backgroundColor: currentScenario.brandColor }}
+                  >
+                    {currentScenario.id === "okcashbag" ? "동의하고 인증하기" : "동의하고 계속하기"}
+                  </button>
+                </div>
+
               </div>
             ) : (
-              /* 가입 완료 화면 */
-              <div className="flex-1 flex flex-col justify-between items-center py-12">
-                <div className="text-center space-y-6 flex-1 flex flex-col justify-center items-center">
-                  <div className="w-20 h-20 bg-blue-toss-light rounded-full flex items-center justify-center text-blue-toss mb-2 shadow-inner">
-                    <Check size={40} className="animate-bounce" />
+              /* 모바일 앱 가입 완료 화면 */
+              <div className="flex-1 pt-9 flex flex-col justify-between items-center bg-white h-full p-6">
+                <div className="text-center space-y-5 flex-1 flex flex-col justify-center items-center">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center text-white mb-2 shadow-inner" style={{ backgroundColor: currentScenario.brandColor }}>
+                    <Check size={32} className="animate-bounce" />
                   </div>
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-extrabold text-gray-900">{currentScenario.title} 가입 성공</h3>
-                    <p className="text-sm text-gray-700 max-w-sm mx-auto leading-relaxed">
-                      회원 등록에 성공했습니다!<br />
-                      우측 **GuardTerms Extension** 패널을 보시면 사용자님의 최종 정보 보호 등급이 
-                      <span className={`font-bold ml-1 ${riskInfo.color}`}>{currentScore}점 ({riskInfo.label})</span> 상태로 맞춤 가입된 것을 확인하실 수 있습니다.
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-black text-gray-900">{currentScenario.title} 가입 성공</h3>
+                    <p className="text-[10px] text-gray-600 max-w-[240px] mx-auto leading-relaxed">
+                      모바일 가입이 성공적으로 완료되었습니다!<br />
+                      우측 **GuardTerms SDK Analyzer**에서 최종 보안 스코어 
+                      <span className={`font-black ml-1 ${riskInfo.color}`}>{currentScore}점 ({riskInfo.label})</span>를 확인하실 수 있습니다.
                     </p>
                   </div>
                 </div>
 
                 <button 
                   onClick={() => setIsSignupComplete(false)}
-                  className="w-full max-w-xs bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3.5 rounded-xl text-xs transition-colors"
+                  className="w-full max-w-[200px] bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl text-[10px] transition-colors cursor-pointer"
                 >
-                  가입 화면으로 다시 돌아가기
+                  가입 화면으로 돌아가기
                 </button>
               </div>
             )}
-          </div>
-        </main>
 
-        {/* [우] Chrome Extension Sidebar (고정 사이드 패널) */}
-        <aside className={`w-[380px] h-full fixed top-[69px] right-0 bg-white border-l border-gray-200 shadow-2xl flex flex-col transition-transform duration-300 ease-out z-30 ${
-          isSidebarOpen ? "translate-x-0" : "translate-x-full"
-        }`}>
+            {/* 가상 아이폰 하단 바 */}
+            <div className="absolute bottom-1.5 left-0 right-0 h-1 flex justify-center z-40">
+              <span className="w-28 h-1 bg-gray-800 rounded-full"></span>
+            </div>
+          </div>
+        </div>
+
+        {/* [우] GuardTerms Mobile SDK Analyzer (분석기 대시보드) */}
+        <aside className="w-full lg:w-[460px] bg-white border border-gray-200 rounded-3xl shadow-sm flex flex-col p-6 space-y-6">
           
-          {/* 사이드바 헤더 */}
-          <div className="px-5 py-4 border-b border-gray-150 flex items-center justify-between bg-gray-50">
+          {/* 분석기 헤더 */}
+          <div className="flex items-center justify-between border-b border-gray-100 pb-4">
             <div className="flex items-center gap-2">
-              <Shield size={16} className="text-blue-toss" />
-              <span className="font-extrabold text-xs text-gray-900 tracking-tight uppercase">GuardTerms Analyzer</span>
-            </div>
-            
-            <button 
-              onClick={() => setIsSidebarOpen(false)}
-              className="text-gray-700 hover:bg-gray-200 p-1 rounded-lg transition-colors"
-              title="사이드바 숨기기"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          {/* 사이드바 본문 스크롤 영역 */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-6 no-scrollbar pb-16">
-            
-            {/* 시나리오명 */}
-            <div className="bg-gray-50 border border-gray-150 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
+              <Shield size={18} className="text-blue-toss" />
               <div>
-                <p className="text-[10px] text-gray-700 font-bold">감지 대상 웹페이지</p>
-                <p className="text-sm font-bold text-gray-900">{currentScenario.title}</p>
+                <span className="font-extrabold text-sm text-gray-900 tracking-tight">GuardTerms SDK Dashboard</span>
+                <p className="text-[9px] text-gray-500 font-semibold mt-0.5">실시간 모바일 데이터 노출 분석 엔진</p>
               </div>
-              <span className="text-2xl">{currentScenario.emoji}</span>
+            </div>
+            <span className="text-[9px] text-green-safe font-black bg-green-safe-light px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+              ● SDK CONNECTED
+            </span>
+          </div>
+
+          {/* 시나리오명 */}
+          <div className="bg-gray-50 border border-gray-150 rounded-2xl p-4 flex items-center justify-between shadow-3xs">
+            <div>
+              <p className="text-[9px] text-gray-500 font-bold">연동 모바일 디바이스 앱</p>
+              <p className="text-sm font-black text-gray-900 flex items-center gap-1.5">
+                <span>{currentScenario.title}</span>
+                <span className="text-[9px] font-bold px-2 py-0.2 rounded-md bg-gray-200 text-gray-700 font-sans">
+                  {currentScenario.category}
+                </span>
+              </p>
+            </div>
+            <span className="text-2xl">{currentScenario.emoji}</span>
+          </div>
+
+          {/* 게이지 및 점수 영역 */}
+          <div className="bg-white border border-gray-150 rounded-2xl p-4 flex flex-col items-center justify-center">
+            
+            <div className="relative w-36 h-36 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle
+                  cx="72"
+                  cy="72"
+                  r="58"
+                  stroke="#F2F4F6"
+                  strokeWidth="10"
+                  fill="transparent"
+                />
+                <circle
+                  cx="72"
+                  cy="72"
+                  r="58"
+                  stroke={riskInfo.fill}
+                  strokeWidth="10"
+                  fill="transparent"
+                  strokeDasharray="364.4"
+                  strokeDashoffset={364.4 - (364.4 * currentScore) / 100}
+                  strokeLinecap="round"
+                  className="transition-all duration-500 ease-out"
+                />
+              </svg>
+
+              {/* 게이지 중앙 점수 */}
+              <div className="absolute text-center flex flex-col items-center">
+                <button 
+                  onClick={() => setShowCriteriaModal(true)}
+                  className="text-[9px] text-gray-500 hover:text-blue-toss font-bold flex items-center gap-0.5 transition-colors cursor-pointer border-none bg-transparent p-0"
+                  title="산정 기준 보기"
+                >
+                  <span>보안 취약도</span>
+                  <HelpCircle size={10} />
+                </button>
+                <p className="text-3xl font-black text-gray-900 tracking-tight leading-none my-0.5">{currentScore}</p>
+                <div className="flex justify-center mt-0.5">
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${riskInfo.bg} ${riskInfo.color}`}>
+                    {riskInfo.label}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* 게이지 및 점수 영역 */}
-            <div className="bg-white border border-gray-150 rounded-2xl p-4 flex flex-col items-center justify-center">
+            {/* 신호등 가이드 */}
+            <div className="flex gap-3.5 text-[9px] font-bold text-gray-500 mt-2">
+              <span className="flex items-center gap-1 text-green-safe"><span className="w-1.5 h-1.5 rounded-full bg-green-safe"></span> 안전</span>
+              <span className="flex items-center gap-1 text-yellow-warn"><span className="w-1.5 h-1.5 rounded-full bg-yellow-warn"></span> 주의</span>
+              <span className="flex items-center gap-1 text-red-danger"><span className="w-1.5 h-1.5 rounded-full bg-red-danger"></span> 위험</span>
+            </div>
+          </div>
+
+          {/* 실시간 취약도 차감 내역 */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
+              <Shield size={12} className="text-blue-toss" /> 실시간 점수 차감 내역
+            </h4>
+            <div className="bg-white border border-gray-150 rounded-2xl p-4 space-y-3 shadow-3xs text-[11px]">
+              <div className="flex justify-between items-center text-gray-700 font-medium">
+                <span>기본 위험도 ({currentScenario.title} 전체 동의)</span>
+                <span className="font-bold text-gray-900">+{currentScenario.baseScore}점</span>
+              </div>
               
-              <div className="relative w-36 h-36 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle
-                    cx="72"
-                    cy="72"
-                    r="58"
-                    stroke="#F2F4F6"
-                    strokeWidth="10"
-                    fill="transparent"
-                  />
-                  <circle
-                    cx="72"
-                    cy="72"
-                    r="58"
-                    stroke={riskInfo.fill}
-                    strokeWidth="10"
-                    fill="transparent"
-                    strokeDasharray="364.4"
-                    strokeDashoffset={364.4 - (364.4 * currentScore) / 100}
-                    strokeLinecap="round"
-                    className="transition-all duration-500 ease-out"
-                  />
-                </svg>
-
-                {/* 게이지 중앙 점수 */}
-                <div className="absolute text-center flex flex-col items-center">
-                  <button 
-                    onClick={() => setShowCriteriaModal(true)}
-                    className="text-[9px] text-gray-500 hover:text-blue-toss font-bold flex items-center gap-0.5 transition-colors cursor-pointer border-none bg-transparent p-0"
-                    title="산정 기준 보기"
-                  >
-                    <span>보안 취약도</span>
-                    <HelpCircle size={10} />
-                  </button>
-                  <p className="text-3xl font-black text-gray-900 tracking-tight leading-none my-0.5">{currentScore}</p>
-                  <div className="flex justify-center mt-0.5">
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${riskInfo.bg} ${riskInfo.color}`}>
-                      {riskInfo.label}
-                    </span>
+              {(() => {
+                const inactiveTerms = currentScenario.terms.filter(term => !term.required && !agreedTermIds[term.id]);
+                if (inactiveTerms.length === 0) {
+                  return (
+                    <div className="bg-blue-toss-light/50 border border-blue-toss/10 p-3 rounded-xl text-[10px] text-blue-toss font-semibold text-center leading-relaxed">
+                      💡 아래 모바일 선택 약관 동의를 해제하면 위험 점수가 감점 적용됩니다.
+                    </div>
+                  );
+                }
+                return (
+                  <div className="space-y-2 border-t border-b border-gray-100 py-2.5">
+                    {inactiveTerms.map(term => (
+                      <div key={term.id} className="flex justify-between items-center text-green-safe font-semibold font-sans">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-safe"></span>
+                          {term.title.replace(/\[선택\]\s*/, "")} 해제
+                        </span>
+                        <span>-{term.impactScore}점</span>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </div>
+                );
+              })()}
 
-              {/* 신호등 가이드 */}
-              <div className="flex gap-3 text-[9px] font-bold text-gray-500 mt-2">
-                <span className="flex items-center gap-1 text-green-safe"><span className="w-1.5 h-1.5 rounded-full bg-green-safe"></span> 안전</span>
-                <span className="flex items-center gap-1 text-yellow-warn"><span className="w-1.5 h-1.5 rounded-full bg-yellow-warn"></span> 주의</span>
-                <span className="flex items-center gap-1 text-red-danger"><span className="w-1.5 h-1.5 rounded-full bg-red-danger"></span> 위험</span>
+              <div className="flex justify-between items-center pt-2.5 border-t border-dashed border-gray-200 font-sans">
+                <span className="font-bold text-gray-900">최종 보안 취약도</span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${riskInfo.bg} ${riskInfo.color}`}>
+                    {riskInfo.label}
+                  </span>
+                  <span className={`${riskInfo.color} text-base font-black`}>
+                    {currentScore}점
+                  </span>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* 실시간 취약도 차감 내역 */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
-                <Shield size={12} className="text-blue-toss" /> 실시간 점수 차감 내역
-              </h4>
-              <div className="bg-white border border-gray-150 rounded-2xl p-4 space-y-3 shadow-2xs text-[11px]">
-                <div className="flex justify-between items-center text-gray-700 font-medium">
-                  <span>기본 위험도 ({currentScenario.title} 전체 동의)</span>
-                  <span className="font-bold text-gray-900">+{currentScenario.baseScore}점</span>
-                </div>
+          {/* AI 실시간 3줄 분석 요약 */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
+              <Sparkles size={12} className="text-blue-toss" /> AI 실시간 3줄 요약
+            </h4>
+            <ul className="space-y-2.5 bg-gray-50 border border-gray-150 p-3.5 rounded-2xl">
+              {currentScenario.baseSummary.map((sum, index) => {
+                let displaySum = sum;
                 
-                {(() => {
-                  const inactiveTerms = currentScenario.terms.filter(term => !term.required && !agreedTermIds[term.id]);
-                  if (inactiveTerms.length === 0) {
-                    return (
-                      <div className="bg-blue-toss-light/50 border border-blue-toss/10 p-3 rounded-xl text-[10px] text-blue-toss font-semibold text-center leading-relaxed">
-                        💡 아래 선택 약관 동의를 해제하면 위험 점수가 낮아집니다. (점수 감점 적용)
-                      </div>
-                    );
+                // 실시간 차단 상태에 따른 3줄 요약 텍스트 오버라이드
+                if (currentScenario.id === "okcashbag") {
+                  if (index === 1 && !agreedTermIds["ok-opt-thirdparty-ins"]) {
+                    displaySum = "🛡️ [차단됨] 보험 제휴 제공을 해제하여 아웃바운드 TM 전화 영업을 차단했습니다.";
                   }
-                  return (
-                    <div className="space-y-2 border-t border-b border-gray-100 py-2.5">
-                      {inactiveTerms.map(term => (
-                        <div key={term.id} className="flex justify-between items-center text-green-safe font-semibold font-sans">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-safe"></span>
-                            {term.title.replace(/\[선택\]\s*/, "")} 해제
-                          </span>
-                          <span>-{term.impactScore}점</span>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
+                  if (index === 2 && !agreedTermIds["ok-opt-reprovide"]) {
+                    displaySum = "🛡️ [차단됨] 계열사 연합 제공 거부로 대기업 간 소비 프로필 결합 위협이 해결되었습니다.";
+                  }
+                }
+                if (currentScenario.id === "pass") {
+                  if (index === 1 && !agreedTermIds["pass-opt-event-trust"]) {
+                    displaySum = "🛡️ [차단됨] 외부 프로모션 젤리블루 위탁을 해제하여 우회적 노출 위험을 예방했습니다.";
+                  }
+                }
+                if (currentScenario.id === "daiso") {
+                  if (index === 1 && !agreedTermIds["daiso-opt-solpay"]) {
+                    displaySum = "🛡️ [차단됨] SOL페이 연계 가입을 해제하여 타사 신용정보 통합 누적 위험을 방지했습니다.";
+                  }
+                }
 
-                <div className="flex justify-between items-center pt-2.5 border-t border-dashed border-gray-200 font-sans">
-                  <span className="font-bold text-gray-900">최종 보안 취약도</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${riskInfo.bg} ${riskInfo.color}`}>
-                      {riskInfo.label}
+                const isProtected = displaySum.startsWith("🛡️");
+
+                return (
+                  <li key={index} className="flex gap-2 text-[11px] leading-relaxed text-gray-700">
+                    <span className={`text-[9px] w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold ${
+                      isProtected ? "bg-green-safe-light text-green-safe" : "bg-gray-200 text-gray-500"
+                    }`}>
+                      {index + 1}
                     </span>
-                    <span className={`${riskInfo.color} text-base font-black`}>
-                      {currentScore}점
+                    <span className={isProtected ? "text-green-safe font-semibold" : ""}>
+                      {displaySum}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* 감지된 위협 분석 */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
+              <AlertTriangle size={12} className="text-yellow-warn" /> 위험 감지 조항 ({
+                currentScenario.riskFactors.filter(rf => agreedTermIds[rf.relatedTermId]).length
+              }건)
+            </h4>
+            
+            <div className="space-y-2.5">
+              {currentScenario.riskFactors.map((rf) => {
+                const isActive = agreedTermIds[rf.relatedTermId];
+                return (
+                  <div 
+                    key={rf.id}
+                    className={`p-3.5 rounded-xl border text-[11px] transition-all duration-200 flex flex-col justify-between gap-2.5 ${
+                      isActive 
+                        ? "bg-white border-red-danger/15 shadow-3xs" 
+                        : "bg-green-safe-light/5 border-green-safe/10 opacity-70"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded-xs ${
+                          !isActive
+                            ? "bg-green-safe-light text-green-safe"
+                            : rf.level === "danger" 
+                              ? "bg-red-danger-light text-red-danger" 
+                              : "bg-yellow-warn-light text-yellow-warn"
+                        }`}>
+                          {!isActive ? "보호됨" : rf.level === "danger" ? "심각" : "경고"}
+                        </span>
+                        <span className={`font-bold ${!isActive ? "text-gray-400 line-through" : "text-gray-950"}`}>
+                          {rf.title}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 leading-snug">
+                        {isActive ? rf.description : rf.resolvedMessage}
+                      </p>
+                    </div>
+
+                    {isActive && (
+                      <button
+                        onClick={() => setDetailRisk(rf)}
+                        className="self-end text-[9px] font-bold text-red-danger bg-red-danger-light hover:bg-red-danger/15 px-2.5 py-1.5 rounded-lg border border-red-danger/10 flex items-center gap-1 transition-colors select-none cursor-pointer"
+                      >
+                        <Search size={11} strokeWidth={2.5} />
+                        <span>독소조항 정밀검사</span>
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 수집 데이터 내역 */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
+              <Lock size={12} className="text-blue-toss" /> 실시간 개인정보 수집 현황 ({
+                currentScenario.collectionItems.filter(item => !item.relatedTermId || agreedTermIds[item.relatedTermId]).length
+              }개)
+            </h4>
+
+            <div className="bg-white border border-gray-150 rounded-2xl p-4 divide-y divide-gray-100 space-y-2.5">
+              {currentScenario.collectionItems.map((item, idx) => {
+                const isCollected = !item.relatedTermId || agreedTermIds[item.relatedTermId];
+                return (
+                  <div key={idx} className="pt-2.5 first:pt-0 flex items-center justify-between text-[11px]">
+                    <span className={`font-medium ${!isCollected ? "text-gray-400 line-through" : "text-gray-900"}`}>
+                      {item.name}
+                    </span>
+                    <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded-xs ${
+                      !isCollected
+                        ? "bg-gray-150 text-gray-400"
+                        : item.required
+                          ? "bg-red-danger-light text-red-danger"
+                          : "bg-blue-toss-light text-blue-toss"
+                    }`}>
+                      {!isCollected ? "수집 안함" : item.required ? "필수" : "선택"}
                     </span>
                   </div>
-                </div>
-              </div>
+                );
+              })}
             </div>
-
-            {/* AI 3줄 요약 */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
-                  <Sparkles size={12} className="text-blue-toss animate-pulse" /> AI 실시간 3줄 요약
-                </h4>
-              </div>
-              <ul className="space-y-2.5 bg-gray-50 border border-gray-150 p-3.5 rounded-2xl">
-                {currentScenario.baseSummary.map((sum, index) => {
-                  let displaySum = sum;
-                  if (currentScenario.id === "sns") {
-                    if (index === 1 && !agreedTermIds["sns-opt-thirdparty"]) {
-                      displaySum = "🛡️ [차단됨] 국외 제3자 정보 제공이 거부되어 마케팅 데이터 유출 위험이 방지되었습니다.";
-                    }
-                    if (index === 2 && !agreedTermIds["sns-opt-location"]) {
-                      displaySum = "🛡️ [차단됨] 위치 권한 배제로 동선 추적 광고 활용 경로가 폐쇄되었습니다.";
-                    }
-                  }
-                  if (currentScenario.id === "shopping") {
-                    if (index === 1 && !agreedTermIds["shop-opt-affiliate"]) {
-                      displaySum = "🛡️ [차단됨] 제휴 카드 제공을 해제하여 부가 할인 발급 광고를 예방했습니다.";
-                    }
-                  }
-
-                  const isProtected = displaySum.startsWith("🛡️");
-
-                  return (
-                    <li key={index} className="flex gap-2 text-[11px] leading-relaxed text-gray-700">
-                      <span className={`text-[9px] w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold ${
-                        isProtected ? "bg-green-safe-light text-green-safe" : "bg-gray-200 text-gray-500"
-                      }`}>
-                        {index + 1}
-                      </span>
-                      <span className={isProtected ? "text-green-safe font-semibold" : ""}>
-                        {displaySum}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
-            {/* 감지된 위협 분석 */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
-                <AlertTriangle size={12} className="text-yellow-warn" /> 위험 감지 조항 ({
-                  currentScenario.riskFactors.filter(rf => agreedTermIds[rf.relatedTermId]).length
-                }건)
-              </h4>
-              
-              <div className="space-y-2.5">
-                {currentScenario.riskFactors.map((rf) => {
-                  const isActive = agreedTermIds[rf.relatedTermId];
-                  return (
-                    <div 
-                      key={rf.id}
-                      className={`p-3.5 rounded-xl border text-[11px] transition-all duration-200 flex flex-col justify-between gap-2.5 ${
-                        isActive 
-                          ? "bg-white border-red-danger/15 shadow-2xs" 
-                          : "bg-green-safe-light/5 border-green-safe/10 opacity-70"
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-xs ${
-                            !isActive
-                              ? "bg-green-safe-light text-green-safe"
-                              : rf.level === "danger" 
-                                ? "bg-red-danger-light text-red-danger" 
-                                : "bg-yellow-warn-light text-yellow-warn"
-                          }`}>
-                            {!isActive ? "보호됨" : rf.level === "danger" ? "심각" : "경고"}
-                          </span>
-                          <span className={`font-bold ${!isActive ? "text-gray-400 line-through" : "text-gray-950"}`}>
-                            {rf.title}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 leading-snug">
-                          {isActive ? rf.description : rf.resolvedMessage}
-                        </p>
-                      </div>
-
-                      {/* 위험이 활성화(Active)일 때만 자세히 보기(돋보기 분석 모달) 노출 */}
-                      {isActive && (
-                        <button
-                          onClick={() => setDetailRisk(rf)}
-                          className="self-end text-[10px] font-bold text-red-danger bg-red-danger-light hover:bg-red-danger/15 px-2.5 py-1.5 rounded-lg border border-red-danger/10 flex items-center gap-1 transition-colors select-none"
-                        >
-                          <Search size={12} strokeWidth={2.5} />
-                          <span>독소조항 정밀검사</span>
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 수집 데이터 내역 */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
-                <Lock size={12} className="text-blue-toss" /> 실시간 개인정보 수집 현황 ({
-                  currentScenario.collectionItems.filter(item => !item.relatedTermId || agreedTermIds[item.relatedTermId]).length
-                }개)
-              </h4>
-
-              <div className="bg-white border border-gray-150 rounded-2xl p-4 divide-y divide-gray-100 space-y-2.5">
-                {currentScenario.collectionItems.map((item, idx) => {
-                  const isCollected = !item.relatedTermId || agreedTermIds[item.relatedTermId];
-                  return (
-                    <div key={idx} className="pt-2.5 first:pt-0 flex items-center justify-between text-[11px]">
-                      <span className={`font-medium ${!isCollected ? "text-gray-400 line-through" : "text-gray-900"}`}>
-                        {item.name}
-                      </span>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-xs ${
-                        !isCollected
-                          ? "bg-gray-150 text-gray-400"
-                          : item.required
-                            ? "bg-red-danger-light text-red-danger"
-                            : "bg-blue-toss-light text-blue-toss"
-                      }`}>
-                        {!isCollected ? "수집 안함" : item.required ? "필수" : "선택"}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
           </div>
 
-          {/* 사이드바 푸터 */}
-          <div className="absolute bottom-0 left-0 right-0 py-3 bg-gray-50 border-t border-gray-150 text-center text-[10px] text-gray-500">
-            GuardTerms Extension v1.0.0 (Toss Style)
-          </div>
         </aside>
       </div>
 
-      {/* 3. 우측 하단 플로팅 확장 프로그램 배지 버튼 (사이드바 닫혀있을 때) */}
-      {!isSidebarOpen && (
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-blue-toss hover:bg-blue-toss-dark text-white rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer z-50 animate-bounce"
-          title="GuardTerms 확장 프로그램 열기"
-        >
-          <Shield size={24} />
-          {/* 위협 인디케이터 배지 점 */}
-          <span className={`absolute top-0.5 right-0.5 w-4.5 h-4.5 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold ${
-            riskInfo.fill === "#12B76A" ? "bg-green-safe" : riskInfo.fill === "#F79009" ? "bg-yellow-warn" : "bg-red-danger"
-          }`}>
-            {currentScenario.riskFactors.filter(rf => agreedTermIds[rf.relatedTermId]).length}
-          </span>
-        </button>
-      )}
-
-      {/* 4. [기존] 약관 상세보기 팝업 모달 */}
+      {/* 3. 약관 상세정보 팝업 모달 */}
       {detailTerm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-2xs z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
@@ -665,7 +641,7 @@ export default function Home() {
               <h3 className="font-extrabold text-base text-gray-900">{detailTerm.title}</h3>
               <button 
                 onClick={() => setDetailTerm(null)}
-                className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full transition-colors"
+                className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full transition-colors cursor-pointer border-none bg-transparent"
               >
                 <X size={18} />
               </button>
@@ -703,7 +679,7 @@ export default function Home() {
             <div className="px-6 py-4 border-t border-gray-150">
               <button
                 onClick={() => setDetailTerm(null)}
-                className="w-full bg-blue-toss text-white font-bold py-3.5 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark"
+                className="w-full bg-blue-toss text-white font-bold py-3.5 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark cursor-pointer border-none"
               >
                 확인 완료
               </button>
@@ -712,7 +688,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* 5. [신규 추가] 위험 조항 정밀 검사 상세 리포트 모달 (형광펜 하이라이트 분석) */}
+      {/* 4. 위험 조항 정밀 검사 상세 리포트 모달 */}
       {detailRisk && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-2xs z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-xl rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
@@ -725,7 +701,7 @@ export default function Home() {
               </div>
               <button 
                 onClick={() => setDetailRisk(null)}
-                className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full transition-colors"
+                className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full transition-colors cursor-pointer border-none bg-transparent"
               >
                 <X size={18} />
               </button>
@@ -785,7 +761,7 @@ export default function Home() {
             <div className="px-6 py-4 border-t border-gray-150">
               <button
                 onClick={() => setDetailRisk(null)}
-                className="w-full bg-blue-toss text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark select-none cursor-pointer"
+                className="w-full bg-blue-toss text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark select-none cursor-pointer border-none"
               >
                 진단 결과 확인 완료
               </button>
@@ -794,7 +770,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* 6. [신규 추가] 위험도 점수 산정 기준 안내 모달 */}
+      {/* 5. 위험도 점수 산정 기준 안내 모달 */}
       {showCriteriaModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-2xs z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
@@ -832,11 +808,11 @@ export default function Home() {
                 <div className="text-xs text-gray-900 font-semibold leading-relaxed space-y-1.5">
                   <div className="flex justify-between border-b border-blue-toss/10 pb-1.5">
                     <span>기본 위험도 점수 (전체 동의 시)</span>
-                    <span>서비스별 상이 (15 ~ 89점)</span>
+                    <span>서비스별 상이 (25 ~ 98점)</span>
                   </div>
                   <div className="flex justify-between text-green-safe">
                     <span>선택 약관 해제에 따른 차감 점수</span>
-                    <span>개별 항목당 -5 ~ -24점</span>
+                    <span>개별 항목당 -10 ~ -28점</span>
                   </div>
                   <div className="pt-1.5 flex justify-between text-blue-toss font-extrabold border-t border-blue-toss/20">
                     <span>최종 취약도 점수</span>
@@ -909,7 +885,7 @@ export default function Home() {
             <div className="px-6 py-4 border-t border-gray-150">
               <button
                 onClick={() => setShowCriteriaModal(false)}
-                className="w-full bg-blue-toss text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark cursor-pointer select-none"
+                className="w-full bg-blue-toss text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark cursor-pointer select-none border-none"
               >
                 기준 안내 확인 완료
               </button>
@@ -917,6 +893,7 @@ export default function Home() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

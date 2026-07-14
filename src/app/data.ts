@@ -3,7 +3,7 @@ export interface Term {
   title: string;
   required: boolean;
   description: string;
-  impactScore: number; // 동의 해제 시 감점되는 위험 점수 (필수 약관도 감점 적용)
+  impactScore: number; // 동의 해제 시 감점되는 위험 점수
   detailInfo: string;
 }
 
@@ -12,14 +12,14 @@ export interface RiskFactor {
   title: string;
   description: string;
   level: "danger" | "warning" | "safe";
-  relatedTermId: string; // 이 위험이 해결되기 위해 해제해야 하는 선택/필수 약관 ID
+  relatedTermId: string; // 이 위험이 해결되기 위해 해제해야 하는 선택 약관 ID
   resolvedMessage?: string; // 해제되었을 때 보여줄 안전 메시지
   
-  // 상세 분석용 필드
-  fullClauseText: string;     
-  dangerSegment: string;      
-  aiAnalysisComment: string;  
-  remedyActionTip: string;    
+  // [상세 분석용 신규 필드]
+  fullClauseText: string;     // 독소 조항이 포함된 실제 약관 법적 원문
+  dangerSegment: string;      // 원문 내에서 형광펜으로 강조할 어구
+  aiAnalysisComment: string;  // 해당 조항이 위험한 상세 보안 설명
+  remedyActionTip: string;    // 사용자 대처 요령 가이드
 }
 
 export interface CollectionItem {
@@ -34,6 +34,8 @@ export interface Scenario {
   title: string;
   category: string;
   emoji: string;
+  brandColor: string; // 브랜드 대표 색상 (예: #E60012, #3182F6 등)
+  textColor: string; // 브랜드 헤더의 글자 색상 (white 또는 black)
   baseScore: number; // 전체 동의 시 기본 위험 점수
   terms: Term[];
   riskFactors: RiskFactor[];
@@ -43,238 +45,355 @@ export interface Scenario {
 
 export const SCENARIOS: Scenario[] = [
   {
-    id: "sns",
-    title: "ConnectX",
-    category: "해외 무료 소셜 미디어 (SNS)",
-    emoji: "💬",
-    baseScore: 89, // 위험 (Red)
+    id: "okcashbag",
+    title: "OK CASHBAG",
+    category: "국내 최대 통합 마일리지 서비스",
+    emoji: "💰",
+    brandColor: "#E60012", // 레드
+    textColor: "text-white",
+    baseScore: 98, // 위험 (Red)
     terms: [
       {
-        id: "sns-req-use",
-        title: "[필수] ConnectX 서비스 이용 약관",
+        id: "ok-req-use",
+        title: "[필수] OK캐쉬백 회원/카드 서비스 이용약관",
         required: true,
-        description: "서비스 기본 기능 이용 및 계정 관리를 위한 필수 동의입니다.",
-        impactScore: 20, // 해제 시 -20점
-        detailInfo: "본 약관은 회원이 ConnectX 서비스를 이용함에 있어 필요한 기본적인 사항을 규정합니다. 회원은 가입과 동시에 본 서비스의 약관에 동의한 것으로 간주되며, 회원의 기본적인 서비스 이용 프로필이 분석 대상에 포함됩니다."
+        description: "회원 가입 및 모바일 카드 발급, 마일리지 적립/사용을 위한 필수 이용약관입니다.",
+        impactScore: 0,
+        detailInfo: "본 약관은 회원이 SK플래닛(주)이 제공하는 OK캐쉬백 서비스를 이용함에 있어 회원과 회사 간의 권리, 의무 및 책임 사항을 규정합니다."
       },
       {
-        id: "sns-req-privacy",
+        id: "ok-req-privacy",
+        title: "[필수] 개인정보 수집 및 활용 동의",
+        required: true,
+        description: "이름, 전화번호, 생년월일 등 서비스 본인 확인 및 계정 생성을 위한 수집 동의입니다.",
+        impactScore: 0,
+        detailInfo: "회사는 서비스 제공을 위해 최소한의 개인식별정보(이름, 휴대폰번호, 생년월일, 성별, CI/DI 고유값)를 필수적으로 수집 및 이용합니다."
+      },
+      {
+        id: "ok-opt-thirdparty-m",
+        title: "[선택] 상품추천서비스 제공 목적 제3자 제공 (SK m&service)",
+        required: false,
+        description: "맞춤 쇼핑 딜 추천 및 제휴 프로모션 연계를 위해 개인정보를 제공합니다.",
+        impactScore: 18,
+        detailInfo: "개인정보를 제공받는 자: SK엠앤서비스(주). 제공 목적: 제휴 서비스 마케팅 및 맞춤형 상품 정보 전송. 제공 항목: 이름, 성별, 연령대, 마일리지 보유 현황."
+      },
+      {
+        id: "ok-opt-thirdparty-comm",
+        title: "[선택] 개인정보 제3자 제공 동의 (SK플래닛 -> (주)커뮤니어스)",
+        required: false,
+        description: "광고주 대행 맞춤 타겟 이벤트 및 마일리지 부가 혜택 연동을 위해 정보를 제공합니다.",
+        impactScore: 12,
+        detailInfo: "개인정보를 제공받는 자: (주)커뮤니어스. 제공 목적: 맞춤 마케팅 광고 전송 대행 및 리워드 광고 연결. 제공 항목: 휴대폰번호, 앱 푸시 토큰, 기기식별값(ADID)."
+      },
+      {
+        id: "ok-opt-benefit",
+        title: "[선택] OK캐쉬백 혜택수신 및 알림 SMS 수신 동의",
+        required: false,
+        description: "다양한 제휴 가맹점 특가 쿠폰 정보 및 마케팅 SMS/이메일 알림을 수신합니다.",
+        impactScore: 15,
+        detailInfo: "회사는 회원이 동의한 범위 내에서 제휴사 할인 이벤트, 마일리지 추가 적립 딜, 금융 제휴 상품 소개 등 광고성 정보를 SMS 및 앱 푸시로 24시간 동안 수시 발송할 수 있습니다."
+      },
+      {
+        id: "ok-opt-thirdparty-ins",
+        title: "[선택] 개인정보 제3자 제공 동의 (SK플래닛 -> DB손해보험, 신한라이프생명)",
+        required: false,
+        description: "제휴 보험사 무료 가입 이벤트 및 금융 상담 전화를 위한 정보 공유 동의입니다.",
+        impactScore: 25,
+        detailInfo: "제공받는 자: DB손해보험(주), 신한라이프생명보험(주). 제공 목적: 보험 상품 소개, 무료 안심 보험 가입 서비스 안내 및 마케팅 아웃바운드 텔레마케팅(TM) 전화 발송. 제공 항목: 이름, 전화번호, 생년월일, 주소."
+      },
+      {
+        id: "ok-opt-reprovide",
+        title: "[선택] 혜택 제공을 위한 제3자 재제공 동의 (SKT, ADT캡스, 11번가 등)",
+        required: false,
+        description: "다수 계열사 및 제휴 대기업 파트너사에게 통합 맞춤형 쇼핑 혜택 분석 목적으로 개인정보를 제공합니다.",
+        impactScore: 28,
+        detailInfo: "제공받는 자: SK텔레콤, SK브로드밴드, ADT캡스, 11번가, 드림어스컴퍼니 등 10개 제휴 파트너사. 제공 목적: 계열사 통합 연계 마케팅 분석 및 표적 서비스 권유. 제공 항목: 온/오프라인 가맹점 마일리지 적립 이력, 쇼핑 구매 품목."
+      }
+    ],
+    riskFactors: [
+      {
+        id: "ok-risk-1",
+        title: "보험 가입 권유 TM 전화 스팸 유발",
+        description: "개인 정보가 제휴 금융사(보험사)로 이전되어 무료 안심 가입이라는 명목하에 매일 아웃바운드 보험 권유 전화를 유입시킬 수 있습니다.",
+        level: "danger",
+        relatedTermId: "ok-opt-thirdparty-ins",
+        resolvedMessage: "보험사 제공 동의 거부로 원치 않는 텔레마케팅(TM) 보험 영업 전화를 원천 차단했습니다.",
+        fullClauseText: "제14조 (제3자 금융 제공) 당사는 무료 안심 상해 보험 가입 및 부가 혜택 연계를 위해 사용자의 실명, 전화번호, 생년월일을 당사 제휴 보험사인 DB손해보험 및 신한라이프생명에 이전하며, 보험사는 이를 활용해 신규 보장성 상품 가입 권유 텔레마케팅 영업 및 아웃바운드 전화 상담 용도로 상시 사용할 수 있습니다.",
+        dangerSegment: "보험사는 이를 활용해 신규 보장성 상품 가입 권유 텔레마케팅 영업 및 아웃바운드 전화 상담 용도로 상시 사용할 수 있습니다",
+        aiAnalysisComment: "금융 제휴사에 이름과 전화번호가 넘어가 '무료 보험 제공'을 빌미로 귀찮은 가입 권유 전화(아웃바운드 TM) 폭탄에 시달리게 만드는 전형적인 독소 조항입니다.",
+        remedyActionTip: "약관 동의 화면에서 '[선택] 개인정보 제3자 제공 동의 (SK플래닛 -> DB손해보험, 신한라이프생명)' 체크박스를 반드시 해제하고 가입해 주세요."
+      },
+      {
+        id: "ok-risk-2",
+        title: "다수 대기업/계열사 간 전방위 데이터 재제공",
+        description: "가입자의 오프라인 가맹점 이용 이력, 적립 품목 등 매우 민감한 행동 데이터가 다수 대기업 파트너사에 연쇄 공유될 위험이 큽니다.",
+        level: "danger",
+        relatedTermId: "ok-opt-reprovide",
+        resolvedMessage: "제3자 재제공 동의 해제로 대기업 연합체 내부의 개인 구매 프로필 연계 위험을 방지했습니다.",
+        fullClauseText: "제19조 (행동 데이터 재제공) SK플래닛은 회원이 적립/사용한 가맹점명, 사용 시간, 구매 품목 내역 및 라이프스타일 정보를 SK텔레콤, 11번가, ADT캡스, 드림어스컴퍼니 등 10개 이상의 전 대기업 파트너 연맹에 공유 및 재제공하여, 각 회사의 마케팅 프로필 데이터와 결합한 맞춤 타겟 광고에 활용합니다.",
+        dangerSegment: "10개 이상의 전 대기업 파트너 연맹에 공유 및 재제공하여, 각 회사의 마케팅 프로필 데이터와 결합한 맞춤 타겟 광고에 활용합니다",
+        aiAnalysisComment: "내 소비 동선과 구매 브랜드가 대기업 그룹사와 쇼핑 파트너사 전방위로 퍼져 나가 '통합 개인 프로필'로 상업적 가공 및 악용될 위험이 매우 큽니다.",
+        remedyActionTip: "가입 폼 하단부의 '[선택] 혜택 제공을 위한 제3자 재제공 동의'를 비활성화하시면 연합사 간의 개인정보 도용을 방지합니다."
+      },
+      {
+        id: "ok-risk-3",
+        title: "주기적인 타겟 쇼핑 스팸 SMS 폭탄",
+        description: "하루 수차례에 걸쳐 광고 문자 및 마케팅 알림이 전송될 수 있어 사생활 환경을 훼손할 수 있습니다.",
+        level: "warning",
+        relatedTermId: "ok-opt-benefit",
+        resolvedMessage: "혜택 문자 수신을 해제하여 일상 스팸 SMS를 예방했습니다.",
+        fullClauseText: "제9조 (광고 발송 권한) 회사는 이벤트 수신 동의를 거친 회원에게 타겟 할인 딜 및 신규 모바일 카드 출시를 촉진하는 유료 SMS 및 이메일, 앱 푸시 마케팅 알림을 시간 제한 없이 실시간 전송할 수 있습니다.",
+        dangerSegment: "이메일, 앱 푸시 마케팅 알림을 시간 제한 없이 실시간 전송할 수 있습니다",
+        aiAnalysisComment: "수시로 쇼핑 권유 딜이나 혜택 유도 알림이 전송되어 휴대폰 알림 피로도를 급증시킬 수 있는 마케팅 조항입니다.",
+        remedyActionTip: "'[선택] OK캐쉬백 혜택수신 및 알림 SMS 수신 동의'를 끄고 진행하시면 광고 문자가 오지 않습니다."
+      }
+    ],
+    baseSummary: [
+      "국내 최대의 제3자 제공 범위를 보유하고 있어 선택 약관 전체 동의 시 스팸 유발 가능성이 매우 높습니다.",
+      "무료 가입 제휴 보험사를 통한 보험 강권 텔레마케팅 전화 유입 조항이 포함되어 있습니다.",
+      "선택 항목을 3개 이상 해제할 시 위협도가 50점 이하의 '주의' 수준으로 낮아져 마일리지 적립 본연의 기능만 안전하게 쓸 수 있습니다."
+    ],
+    collectionItems: [
+      { name: "이름, 생년월일, 성별, 휴대폰 번호", required: true, type: "본인인증 필수" },
+      { name: "CI/DI 암호화 고유 식별 값", required: true, type: "본인인증 필수" },
+      { name: "OK캐쉬백 적립처 및 사용 포인트 내역", required: false, type: "행동분석 선택", relatedTermId: "ok-opt-reprovide" },
+      { name: "보험 가입 추천용 전화번호 및 주소", required: false, type: "금융 제휴 선택", relatedTermId: "ok-opt-thirdparty-ins" },
+      { name: "맞춤 타겟용 ADID (광고 기기 식별 값)", required: false, type: "마케팅 선택", relatedTermId: "ok-opt-thirdparty-comm" }
+    ]
+  },
+  {
+    id: "pass",
+    title: "PASS 인증서",
+    category: "이동통신 3사 통합 본인 확인 서비스",
+    emoji: "🔐",
+    brandColor: "#000000", // 블랙
+    textColor: "text-white",
+    baseScore: 62, // 주의 (Yellow)
+    terms: [
+      {
+        id: "pass-req-use",
+        title: "[필수] PASS 서비스 이용약관",
+        required: true,
+        description: "간편인증서 발급 및 본인식별 수단 제공을 위한 기본 약관 동의입니다.",
+        impactScore: 0,
+        detailInfo: "본 약관은 회원이 통신사가 제공하는 PASS 간편인증 및 전자서명 서비스를 이용함에 있어 권리와 책임 한계를 명시합니다."
+      },
+      {
+        id: "pass-req-privacy",
         title: "[필수] 개인정보 수집 및 이용 동의",
         required: true,
-        description: "이름, 이메일, 생년월일 등 계정 생성을 위한 필수 정보 수집 동의입니다.",
-        impactScore: 24, // 해제 시 -24점
-        detailInfo: "회사는 서비스 제공을 위해 아래와 같은 개인정보를 필수 수집합니다. 수집 정보: 이메일 주소, 이름, 생년월일, 프로필 이미지. 보관 기간: 회원 탈퇴 시까지."
+        description: "통신사 본인 명의 개통 여부 대조를 위해 필수 수집되는 항목입니다.",
+        impactScore: 0,
+        detailInfo: "수집 항목: 성명, 휴대폰번호, 통신사, 생년월일, 성별, 내외국인 정보. 이용 목적: PASS 인증 거래 서명 검증."
       },
       {
-        id: "sns-opt-thirdparty",
-        title: "[선택] 개인정보 국외 이전 및 제3자 제공 동의",
-        required: false,
-        description: "맞춤형 피드 구성을 위해 전 세계 광고 파트너사에게 개인 데이터를 제공합니다.",
-        impactScore: 20, // 해제 시 -20점
-        detailInfo: "수집된 행동 데이터(클릭 로그, 포스팅 내용, 친구 목록 등)는 맞춤형 콘텐츠 및 광고 제공을 목적으로 당사의 해외 계열사 및 제3자 마케팅 대행사에 제공 및 이전됩니다."
+        id: "pass-req-trust",
+        title: "[필수] 개인정보의 취급위탁 동의",
+        required: true,
+        description: "금융결제원 및 외부 신용평가기관과의 정보 중계를 위한 필수 동의입니다.",
+        impactScore: 0,
+        detailInfo: "회사는 원활한 신원 검증 처리를 위해 NICE평가정보 및 코리아크레딧뷰로(KCB) 등 외부 평가 기관에 통신 신용 확인 위탁 처리를 진행합니다."
       },
       {
-        id: "sns-opt-marketing",
-        title: "[선택] 광고성 정보 수신 및 마케팅 활용 동의",
+        id: "pass-opt-event-privacy",
+        title: "[선택] 이벤트 참여를 위한 개인정보 수집 및 이용 동의",
         required: false,
-        description: "신규 기능 소개 및 스폰서 광고 목적의 푸시 알림과 이메일 수신 동의입니다.",
-        impactScore: 15, // 해제 시 -15점
-        detailInfo: "회사는 회원이 동의한 마케팅 정보를 바탕으로 이메일, SMS, 앱 푸시 알림 등을 통해 스폰서 광고 및 맞춤 이벤트 홍보 자료를 전송할 수 있습니다."
+        description: "인증 완료 후 제공되는 경품 룰렛 및 기프티콘 증정 이벤트 참여 용도입니다.",
+        impactScore: 15,
+        detailInfo: "수집 목적: PASS 브랜드 제휴 경품 응모 및 당첨 여부 고지. 수집 항목: 휴대폰 번호, 이름. 보관 기간: 이벤트 종료 후 3개월."
       },
       {
-        id: "sns-opt-location",
-        title: "[선택] 위치 기반 정보 수집 및 이용 동의",
+        id: "pass-opt-event-trust",
+        title: "[선택] 이벤트 대행을 위한 개인정보 처리위탁 동의",
         required: false,
-        description: "내 주변 친구 추천 및 인근 매장 맞춤 마케팅을 위한 실시간 위치 수집 동의입니다.",
-        impactScore: 10, // 해제 시 -10점
-        detailInfo: "회원의 GPS 정보 및 IP 주소를 통해 현재 위치 정보를 주기적으로 전송받아 인근 서비스 제휴사 광고 및 지역 기반 네트워크 피드를 구성하는 데 사용합니다."
+        description: "모바일 쿠폰 발송 및 마케팅 대행 외주사에게 위탁하기 위한 동의입니다.",
+        impactScore: 13,
+        detailInfo: "수탁자: 젤리블루, 대행 대행사 다수. 위탁 업무: 모바일 경품 기프티콘 MMS 발송 및 타겟 광고 집행 대행."
+      },
+      {
+        id: "pass-opt-marketing",
+        title: "[선택] 광고성 정보 수신동의 및 혜택 알림",
+        required: false,
+        description: "간편인증 시 제공되는 금융/쇼핑 연계 부가 혜택 및 특가 보험 제안 알림 수신 동의입니다.",
+        impactScore: 12,
+        detailInfo: "회원은 PASS 앱의 푸시 배너 및 팝업 화면을 통해 금융 제휴 신용카드 발급, 신용 리포트 무료 진단 등 다양한 상업적 광고 정보를 수신하는 데 동의합니다."
       }
     ],
     riskFactors: [
       {
-        id: "sns-risk-1",
-        title: "행동 데이터 국외 무단 공유",
-        description: "사용자가 클릭한 포스트, 좋아요 흔적, 채팅 검색어 등이 국외 마케팅 에이전시로 암호화 없이 이전될 위험이 있습니다.",
-        level: "danger",
-        relatedTermId: "sns-opt-thirdparty",
-        resolvedMessage: "제3자 제공 거부로 사용자의 행동 데이터 국외 이전 위험이 원천 차단되었습니다.",
-        fullClauseText: "제7조 (개인정보의 이전 및 위탁) 회사는 서비스 안정성 및 맞춤형 피드 최적화 광고 알고리즘 분석을 위해 사용자의 모든 서비스 활동 로그(좋아요 흔적, 메신저 키워드, 페이지 체류 시간 등)를 전 세계 다국적 광고 제휴 에이전시 및 국외 마케팅 대행 파트너 사에게 무단 및 암호화 없이 이전 및 제공할 수 있으며, 회원은 본 약관 동의로써 이에 동의합니다.",
-        dangerSegment: "사용자의 모든 서비스 활동 로그(좋아요 흔적, 메신저 키워드, 페이지 체류 시간 등)를 전 세계 다국적 광고 제휴 에이전시 및 국외 마케팅 대행 파트너 사에게 무단 및 암호화 없이 이전 및 제공할 수 있으며",
-        aiAnalysisComment: "사용자가 남기는 모든 민감한 활동 기록(클릭 경로, 채팅 키워드 등)이 국외 광고 연합체에게 무제한 전송된다는 무서운 조항입니다. 정보 주체의 관심사나 사생활이 데이터 분석용으로 도용 및 영구 프로파일링 될 우려가 큽니다.",
-        remedyActionTip: "회원 가입 폼에서 '[선택] 개인정보 국외 이전 및 제3자 제공 동의' 체크박스를 즉시 해제하시면 행동 데이터의 상업 목적 유출을 법적으로 원천 차단합니다."
+        id: "pass-risk-1",
+        title: "경품 응모를 위장한 대행사 정보 유출",
+        description: "이벤트 참여 및 대행사 위탁 동의 시, 경품 응모와 기프티콘 발송이라는 명목으로 내 번호가 다수의 외부 마케팅 대행 외주사에 위탁 공유됩니다.",
+        level: "warning",
+        relatedTermId: "pass-opt-event-trust",
+        resolvedMessage: "이벤트 대행 위탁 해제로 타사 마케팅 대행업체로의 우회성 유출 경로를 격리했습니다.",
+        fullClauseText: "제11조 (마케팅 위탁) PASS는 이벤트 참여 및 경품 대행 서비스를 위해 회원의 전화번호를 당사 외부 프로모션 제휴 위탁사인 젤리블루 및 다수의 소규모 마케팅 대행 파트너사들에 이전하여 가공 및 문자 전송 업무를 수행하게 합니다.",
+        dangerSegment: "외부 프로모션 제휴 위탁사인 젤리블루 및 다수의 소규모 마케팅 대행 파트너사들에 이전하여",
+        aiAnalysisComment: "인증서를 쓰려고 할 뿐인데 복잡한 외부 광고 마케팅 대행사들에 전화번호가 유입되어 추후 타겟 광고 스팸에 간접 기여할 수 있는 통로가 됩니다.",
+        remedyActionTip: "'[선택] 이벤트 대행을 위한 개인정보 처리위탁 동의' 체크를 해제하시면 내 번호가 타 마케팅 사로 이전되는 것을 차단합니다."
       },
       {
-        id: "sns-risk-2",
-        title: "실시간 위치 추적 및 광고 악용",
-        description: "앱이 백그라운드에 있을 때도 GPS 좌표를 수집하여 방문하는 장소에 따른 표적 광고에 활용할 위험이 있습니다.",
+        id: "pass-risk-2",
+        title: "인증서 홈 화면의 금융 광고 표적 노출",
+        description: "PASS 앱을 켤 때마다 전체 화면 광고나 혜택 카드라는 명목으로 금융 대출, 신용 카드 가입 팝업 스팸이 자주 노출될 수 있습니다.",
         level: "warning",
-        relatedTermId: "sns-opt-location",
-        resolvedMessage: "위치 수집 거부로 사용자의 이동 동선 노출 및 실시간 추적 우려가 해소되었습니다.",
-        fullClauseText: "제12조 (위치정보의 수집) 당사는 실시간 인근 네트워크 친구 매칭 및 위치 특화 제휴 할인 광고 서비스의 제공을 위하여 사용자의 GPS 모듈 신호 및 기지국 IP 주소를 주기적으로 백서버로 수집합니다. 특히 앱이 활성화되어 있지 않은 백그라운드 상태나 기기가 꺼지지 않은 모든 작동 상태에서도 위치 정보 조회가 무작동으로 상시 백그라운드 구동될 수 있습니다.",
-        dangerSegment: "앱이 활성화되어 있지 않은 백그라운드 상태나 기기가 꺼지지 않은 모든 작동 상태에서도 위치 정보 조회가 무작동으로 상시 백그라운드 구동될 수 있습니다",
-        aiAnalysisComment: "어플리케이션을 적극적으로 사용하지 않는 오프라인 일상 시간에도 GPS 좌표가 상시 수집되어 기록된다는 뜻입니다. 방문지 목록이나 물리적 행동 동선 정보가 고스란히 유출될 수 있습니다.",
-        remedyActionTip: "가입 폼에서 '[선택] 위치 기반 정보 수집 및 이용 동의' 체크를 해제하시면 상시 위치 트래킹 엔진을 격리시킬 수 있습니다."
-      },
-      {
-        id: "sns-risk-3",
-        title: "무차별 광고성 스팸 노출",
-        description: "개인 프로필 분석을 기반으로 하루 10회 이상의 맞춤 타겟 이메일과 푸시 알림이 발송될 수 있습니다.",
-        level: "warning",
-        relatedTermId: "sns-opt-marketing",
-        resolvedMessage: "마케팅 활용 동의를 해제하여 불필요한 스팸 및 타겟 마케팅 알림이 차단되었습니다.",
-        fullClauseText: "제9조 (광고 전송) 회사는 마케팅 및 광고 수집 정보에 동의한 회원에 대하여 서비스 이용에 부합하는 타겟 메일링, 문자 스팸, 일일 10회 이상의 푸시 마케팅 알림 등 다채로운 스폰서 광고 매체를 무제한 발송할 수 있으며, 이로 인해 통신 요금이 청구될 수 있습니다.",
-        dangerSegment: "일일 10회 이상의 푸시 마케팅 알림 등 다채로운 스폰서 광고 매체를 무제한 발송할 수 있으며",
-        aiAnalysisComment: "서버가 사용자의 행동 성향을 판독하여 하루에도 몇 번씩 원하지 않는 스폰서 알림이나 이메일 광고 폭탄을 유발할 수 있습니다. 쾌적한 모바일 사용 환경을 심각하게 훼손할 수 있는 양식입니다.",
-        remedyActionTip: "가입 폼에서 '[선택] 광고성 정보 수신 및 마케팅 활용 동의'의 동의 체크를 꺼두시면 광고 스팸이 오지 않습니다."
+        relatedTermId: "pass-opt-marketing",
+        resolvedMessage: "광고성 정보 수신 거부로 앱 내 무분별한 팝업 배너 광고 침투를 비활성화했습니다.",
+        fullClauseText: "제17조 (앱 푸시 광고) 통신 3사는 광고 마케팅 활용 동의를 완료한 사용자에 한하여 간편인증 성공 페이지 하단 및 PASS 앱 홈 화면 전체 팝업 형태로 고금리 저축 상품 대출 알림 및 신용카드 가입 유도 마케팅을 실시간 팝업할 수 있습니다.",
+        dangerSegment: "간편인증 성공 페이지 하단 및 PASS 앱 홈 화면 전체 팝업 형태로 고금리 저축 상품 대출 알림 및 신용카드 가입 유도 마케팅을 실시간 팝업",
+        aiAnalysisComment: "인증서 본연의 보안 기능 외에 사용자의 소비 패턴을 자극하는 금융성 카드 발급 스팸 배너를 인증 완료 화면에 집요하게 강제 노출하도록 허용하는 조항입니다.",
+        remedyActionTip: "'[선택] 광고성 정보 수신동의 및 혜택 알림'의 체크를 끄면 인증 화면이 한결 깔끔하고 안전하게 유지됩니다."
       }
     ],
     baseSummary: [
-      "서비스 가입 즉시 대부분의 개인 행동 데이터(좋아요, 검색)가 수집됩니다.",
-      "마케팅 선택 약관 동의 시, 해외 다수 파트너사에게 프로필 데이터가 공유되어 맞춤형 스폰서 광고에 노출됩니다.",
-      "위치 기반 동의 시, 실시간 GPS 및 IP 추적을 통해 물리적인 동선이 지속적으로 서버에 누적됩니다."
+      "본인 인증 서비스를 위한 필수 조항은 금융 보안 가이드라인에 맞춰 비교적 투명합니다.",
+      "하지만 이벤트 참여 및 경품 추천에 동의할 시 외부 마케팅 대행사로 번호 위탁이 이루어집니다.",
+      "선택 약관을 해제하면 안전 등급(34점)으로 크게 떨어져 순수 인증용 메커니즘으로만 격리 작동시킬 수 있습니다."
     ],
     collectionItems: [
-      { name: "이메일 주소 및 계정 정보", required: true, type: "로그인용 필수", relatedTermId: "sns-req-privacy" },
-      { name: "생년월일 및 성별", required: true, type: "프로필용 필수", relatedTermId: "sns-req-privacy" },
-      { name: "웹 브라우저 쿠키 및 방문 정보", required: false, type: "마케팅용 선택", relatedTermId: "sns-opt-thirdparty" },
-      { name: "앱 서비스 내 채팅 및 활동 로그", required: false, type: "빅데이터용 선택", relatedTermId: "sns-opt-thirdparty" },
-      { name: "GPS 실시간 위치 좌표", required: false, type: "위치 서비스용 선택", relatedTermId: "sns-opt-location" },
-      { name: "전화번호 및 기기 연락처 목록", required: false, type: "친구 매칭용 선택", relatedTermId: "sns-opt-marketing" }
+      { name: "성명, 생년월일, 성별, 통신사 및 휴대폰 번호", required: true, type: "본인인증 필수" },
+      { name: "NICE/KCB 통신 신용정보 조회 로그", required: true, type: "인증대조 필수" },
+      { name: "경품 지급용 휴대폰 연락처 정보", required: false, type: "이벤트 선택", relatedTermId: "pass-opt-event-privacy" },
+      { name: "대행사 모바일 광고 트래킹 식별자", required: false, type: "마케팅 위탁 선택", relatedTermId: "pass-opt-event-trust" }
     ]
   },
   {
-    id: "shopping",
-    title: "BuyEasy",
-    category: "국내 대형 온라인 쇼핑몰",
+    id: "daiso",
+    title: "다이소 멤버십",
+    category: "국내 대표 생활용품 브랜드 멤버십",
     emoji: "🛍️",
-    baseScore: 55, // 주의 (Yellow)
+    brandColor: "#D11C23", // 다이소 레드
+    textColor: "text-white",
+    baseScore: 58, // 주의 (Yellow)
     terms: [
       {
-        id: "shop-req-use",
-        title: "[필수] BuyEasy 회원 약관 동의",
+        id: "daiso-req-use",
+        title: "[필수] 다이소 멤버십 이용 약관",
         required: true,
-        description: "회원 등급 혜택, 주문 결제 및 배송을 위한 기본 이용 약관입니다.",
-        impactScore: 15, // 해제 시 -15점
-        detailInfo: "본 약관은 회원이 쇼핑몰에서 상품을 주문하고 결제하며 배송 처리를 받는 과정의 권리와 의무를 규정합니다."
+        description: "다이소 매장 포인트 적립 및 사용, 멤버십 가입을 위한 기본 권리 의무 사항입니다.",
+        impactScore: 0,
+        detailInfo: "본 약관은 아성다이소(주)가 운영하는 다이소 멤버십 회원이 오프라인 및 온라인 샵 다이소에서 상품 구매에 따른 마일리지를 환산하는 권리를 명시합니다."
       },
       {
-        id: "shop-req-privacy",
-        title: "[필수] 필수 개인정보 수집 및 배송 대행 동의",
+        id: "daiso-req-privacy",
+        title: "[필수] 필수 개인정보 수집 및 이용 동의서",
         required: true,
-        description: "결제 완료 후 상품을 배송지 주소로 송부하기 위한 필수 동의입니다.",
-        impactScore: 10, // 해제 시 -10점
-        detailInfo: "회사는 구매 완료 시 원활한 배송 서비스 제공을 위해 구매자의 성명, 연락처, 주소를 판매자 및 택배업체에 제공합니다."
+        description: "회원 식별 및 포인트 적립 한도 관리를 위한 최소한의 데이터 수집 동의입니다.",
+        impactScore: 0,
+        detailInfo: "회사는 포인트 적립 처리를 위해 성명, 성별, 연령대, 휴대전화번호를 필수 보유하며, 동의하지 않을 시 멤버십 혜택을 이용할 수 없습니다."
       },
       {
-        id: "shop-opt-marketing",
-        title: "[선택] 마케팅 광고 및 이벤트 수신 동의",
+        id: "daiso-opt-thirdparty",
+        title: "[선택] 제3자 정보 제공 동의 (제휴 가맹점)",
         required: false,
-        description: "이벤트 특가 쿠폰 발송 및 맞춤형 상품 추천 푸시 알림 수신 동의입니다.",
-        impactScore: 12, // 해제 시 -12점
-        detailInfo: "회원은 당사가 제공하는 할인 쿠폰 알림, 타임세일 이벤트 메일 및 SMS 메시지를 선택적으로 수신할 수 있습니다."
+        description: "다이소 제휴 패션/뷰티 브랜드 및 패밀리 서비스 매장 포인트 통합 적립용입니다.",
+        impactScore: 18,
+        detailInfo: "제공받는 자: 당사 패밀리 서비스 파트너사 및 제휴 뷰티 유통사. 제공 목적: 브랜드 연계 통합 프로모션 제공. 제공 항목: 구매 내역 및 매장 방문 선호 데이터."
       },
       {
-        id: "shop-opt-affiliate",
-        title: "[선택] 제휴 제3자 제휴 카드사 정보 제공 동의",
+        id: "daiso-opt-solpay",
+        title: "[선택] 다이소-SOL페이 동시 가입하기 동의",
         required: false,
-        description: "간편결제 연동 및 포인트 추가 적립을 위한 제휴 카드사 데이터 전송 동의입니다.",
-        impactScore: 18, // 해제 시 -18점
-        detailInfo: "당사와 파트너십을 맺은 금융사 및 카드사에 회원의 구매 카테고리 선호도 데이터를 이전하여 특화 할인 혜택 매칭에 활용합니다."
+        description: "신용카드 결제 혜택 극대화 및 간편결제 자동 연동을 위해 금융 플랫폼을 동시 가입합니다.",
+        impactScore: 20,
+        detailInfo: "회원은 멤버십 가입과 동시에 신한카드(주)가 제공하는 SOL페이 간편결제 서비스의 회원 약관에 일괄 동의하며, 가입 승인을 금융사에 즉각 이관 요청하는 데 승인합니다."
       }
     ],
     riskFactors: [
       {
-        id: "shop-risk-1",
-        title: "제휴 금융사의 카드 가입 권유",
-        description: "선호 구매 정보가 제휴 카드사로 넘어가, 연동 할인 카드 발급 광고 및 상담 전화를 받게 될 우려가 있습니다.",
+        id: "daiso-risk-1",
+        title: "제휴 금융 플랫폼 우회성 동시 가입",
+        description: "단순 포인트 적립을 위한 멤버십 가입 시, '동시 가입' 선택지에 동의하면 나도 모르게 제휴 카드사의 금융 페이 서비스에 일괄 회원 가입 처리될 수 있습니다.",
         level: "warning",
-        relatedTermId: "shop-opt-affiliate",
-        resolvedMessage: "제휴사 동의를 차단하여 금융 제휴 카드의 표적 아웃바운드 텔레마케팅 가능성을 방지했습니다.",
-        fullClauseText: "제14조 (제휴 서비스 활성화) 회사는 회원 맞춤형 혜택 정보 매칭을 위하여 BuyEasy 회원 중 제휴 제3자 동의를 마친 회원의 구매 빈도, 주소지 연령대, 선호 상품 카테고리를 당사 제휴 카드사에 전송합니다. 카드사는 이를 신용카드 발급 권유, 통합 보험 가입 텔레마케팅 아웃바운드 영업 목적으로 활용할 수 있습니다.",
-        dangerSegment: "카드사는 이를 신용카드 발급 권유, 통합 보험 가입 텔레마케팅 아웃바운드 영업 목적으로 활용할 수 있습니다",
-        aiAnalysisComment: "사용자의 동의 하에 금융 제휴사(카드, 보험)에 정보가 이전되어 대출이나 카드 가입 관련 원치 않는 홍보 전화(아웃바운드 TM) 폭탄을 받을 수 있게 됩니다.",
-        remedyActionTip: "가입 폼에서 '[선택] 제휴 제3자 제휴 카드사 정보 제공 동의' 체크박스를 해제하시면 금융사로의 정보 전달이 거절되어 안심하실 수 있습니다."
+        relatedTermId: "daiso-opt-solpay",
+        resolvedMessage: "동시 가입 선택 해제로 불필요한 타사 금융 플랫폼 일괄 가입을 방지했습니다.",
+        fullClauseText: "제15조 (동시 가입의 이관) 당사 멤버십 가입과 함께 다이소-SOL페이 동시 가입에 동의한 회원의 경우, 신한카드 간편결제 구동을 위한 주민등록번호 및 신용 연동 식별 데이터를 해당 금융사에 지체 없이 제공하며, 해당 금융사의 전자금융거래 약관에 자동 동의된 회원으로 일괄 위탁 등록됩니다.",
+        dangerSegment: "주민등록번호 및 신용 연동 식별 데이터를 해당 금융사에 지체 없이 제공하며, 해당 금융사의 전자금융거래 약관에 자동 동의된 회원으로 일괄 위탁 등록",
+        aiAnalysisComment: "매장 포인트 적립만을 생각하고 가입했다가 외부 신용카드/금융사 간편결제 회원으로 중복 등록되어 민감한 주민번호 및 신용 데이터 연동이 유발되는 조항입니다.",
+        remedyActionTip: "약관 목록 최하단의 '[선택] 다이소-SOL페이 동시 가입하기 동의' 체크박스를 꺼 주시면 안전합니다."
       },
       {
-        id: "shop-risk-2",
-        title: "쇼핑 정보 기반 스팸 문자",
-        description: "특가 상품 판매 유도를 위한 장바구니 리마인드 알림 및 일일 쿠폰 SMS 스팸이 잦아질 수 있습니다.",
+        id: "daiso-risk-2",
+        title: "오프라인 매장 방문 및 쇼핑 성향 유출",
+        description: "제3자 제공 동의 시, 내가 주로 어떤 매장을 방문해 어떤 생필품을 자주 구매하는지에 대한 구매 이력이 마케팅 분석용으로 공유될 위험이 있습니다.",
         level: "warning",
-        relatedTermId: "shop-opt-marketing",
-        resolvedMessage: "광고 마케팅 수신 거부로 일일 쇼핑 알림 및 문자 스팸 유입 경로를 차단했습니다.",
-        fullClauseText: "제18조 (이벤트 정보 수신) BuyEasy는 회원의 마케팅 광고 동의를 활용하여 장바구니에 담아둔 상품의 할인 기한 리마인드, 관심 브랜드의 일일 타임세일 관련 광고 메일 및 타겟 단문 메시지(SMS)를 24시간 동안 수시로 발송할 수 있습니다.",
-        dangerSegment: "타겟 단문 메시지(SMS)를 24시간 동안 수시로 발송할 수 있습니다",
-        aiAnalysisComment: "할인 기한 알림이나 장바구니 리마인드라는 핑계로, 사실상 24시간 내내 실시간 문자나 광고 메세지를 사용자 핸드폰에 누적 전송하게 유도하는 악용 여지가 있습니다.",
-        remedyActionTip: "가입 폼에서 '[선택] 마케팅 광고 및 이벤트 수신 동의'를 끄고 가입하시면 필수 영수증 안내 문자 외의 일체 광고 문자가 오지 않습니다."
+        relatedTermId: "daiso-opt-thirdparty",
+        resolvedMessage: "제3자 제공 거부로 내 장바구니 품목 및 라이프스타일 유출을 차단했습니다.",
+        fullClauseText: "제18조 (쇼핑 데이터 제공) 회사는 제3자 제공 동의 회원에 한하여, 전국 매장에서 구매된 일일 적립 상품의 SKU(바코드 품목), 결제 시간대 및 매장 주소 데이터를 제휴 광고 분석 기관에 이전하여 쇼핑 성향 분석 마케팅에 제공합니다.",
+        dangerSegment: "바코드 품목, 결제 시간대 및 매장 주소 데이터를 제휴 광고 분석 기관에 이전하여",
+        aiAnalysisComment: "마트나 매장에서 무엇을 샀는지 세세한 바코드 단위의 영수증 정보가 제휴사에 공유되어 관심사 프로파일링에 도용될 우려가 있습니다.",
+        remedyActionTip: "'[선택] 제3자 정보 제공 동의' 체크를 해제하시면 구매 영수증 데이터의 외부 유출이 법적으로 차단됩니다."
       }
     ],
     baseSummary: [
-      "국내 전자상거래법에 근거한 비교적 안전한 약관 체계를 유지하고 있습니다.",
-      "제3자 제휴 정보 제공 동의 시, 제휴 금융사의 신용카드 가입 마케팅 대상자로 분류될 수 있습니다.",
-      "선택 약관을 해제할 경우 배송 및 결제 본연의 기능만 안전하게 보장받습니다."
+      "국내 오프라인 멤버십 특성상 기본 약관은 다소 무난하게 보호됩니다.",
+      "단, 제휴 카드사 결제 솔루션과의 '동시 가입' 유도 조항이 있어 무분별한 금융사 정보 이관이 유발될 수 있습니다.",
+      "체크를 해제하면 20점의 완벽한 '안전 등급' 마일리지 계정으로 운용할 수 있습니다."
     ],
     collectionItems: [
-      { name: "수령인 성명, 배송 주소, 전화번호", required: true, type: "배송 처리용 필수", relatedTermId: "shop-req-privacy" },
-      { name: "신용카드번호 및 결제 인증 정보", required: true, type: "결제용 필수", relatedTermId: "shop-req-privacy" },
-      { name: "구매 이력 및 자주 본 카테고리 데이터", required: false, type: "맞춤 쇼핑용 선택", relatedTermId: "shop-opt-affiliate" },
-      { name: "SMS 및 이메일 수신 여부", required: false, type: "이벤트 광고용 선택", relatedTermId: "shop-opt-marketing" }
+      { name: "성명, 휴대전화번호, 성별", required: true, type: "식별정보 필수" },
+      { name: "구매 금액 및 포인트 적립 포인트 이력", required: true, type: "마일리지 필수" },
+      { name: "다이소 매장 방문 위치 및 구매 품목", required: false, type: "성향분석 선택", relatedTermId: "daiso-opt-thirdparty" },
+      { name: "주민등록번호 기반 신용 연동 값", required: false, type: "금융 연동 선택", relatedTermId: "daiso-opt-solpay" }
     ]
   },
   {
-    id: "finance",
-    title: "SecurePay",
-    category: "국내 1금융권 기반 간편결제 서비스",
-    emoji: "🛡️",
-    baseScore: 15, // 안전 (Green)
+    id: "starbucks",
+    title: "STARBUCKS",
+    category: "식음료 브랜드 모바일 오더 서비스",
+    emoji: "☕",
+    brandColor: "#00704A", // 스타벅스 그린
+    textColor: "text-white",
+    baseScore: 25, // 안전 (Green)
     terms: [
       {
-        id: "fin-req-use",
-        title: "[필수] 전자금융거래 기본 약관 동의",
+        id: "star-req-use",
+        title: "[필수] 스타벅스 회원 이용약관 동의",
         required: true,
-        description: "안전하고 투명한 금융 거래 체계 이용을 위한 법적 필수 약관입니다.",
-        impactScore: 5, // 해제 시 -5점
-        detailInfo: "본 약관은 여신금융협회 및 금융위원회 규정에 따라 전자금융거래의 안정성과 신뢰성을 확보하는 데 목적이 있습니다."
+        description: "모바일 사이렌오더, 카드 충전 및 전자 영수증 발행을 위한 기본 약관입니다.",
+        impactScore: 0,
+        detailInfo: "본 약관은 주식회사 에스씨케이컴퍼니가 제공하는 스타벅스 리워드 회원 서비스의 충전, 사이렌 오더 주문 및 리워드 별(Star) 적립 기준을 정의합니다."
       },
       {
-        id: "fin-req-identity",
-        title: "[필수] 본인 확인 및 신용 정보 조회 동의",
+        id: "star-req-privacy",
+        title: "[필수] 개인정보 수집 및 이용동의",
         required: true,
-        description: "본인 거래 보장 및 비대면 계좌 연동을 위한 필수 본인 인증 동의입니다.",
-        impactScore: 5, // 해제 시 -5점
-        detailInfo: "주민등록번호 및 휴대폰 본인 인증 등을 통해 타인의 도용을 방지하고 본인 명의 계좌 연동만을 허용하기 위한 개인식별정보 조회 프로세스입니다."
+        description: "닉네임, 생년월일, 모바일 결제 매칭을 위한 필수 계정 정보 수집 동의입니다.",
+        impactScore: 0,
+        detailInfo: "수집 항목: 이메일, 닉네임, 휴대폰 번호, 생년월일. 이용 목적: 사이렌오더 호출 닉네임 인식 및 모바일 카드 연동."
       },
       {
-        id: "fin-opt-benefit",
-        title: "[선택] 자산 관리 및 자산 추천 혜택 알림 동의",
+        id: "star-opt-marketing",
+        title: "[선택] E-mail 및 SMS 광고성 정보 수신동의",
         required: false,
-        description: "카드 혜택 정렬 및 계좌 잔액 모니터링 관련 유용한 금융 팁 알림 동의입니다.",
-        impactScore: 5, // 해제 시 -5점
-        detailInfo: "회원이 동의할 시 주기적인 연동 자산의 통합 리포트를 발급하고, 소비 패턴을 기반으로 유용한 금융 상식을 알려주는 비마케팅성 혜택 안내입니다."
+        description: "사이렌 오더 신제품 출시 알림, 무료 음료 e-쿠폰 증정 이벤트 소식 수신 동의입니다.",
+        impactScore: 10,
+        detailInfo: "회사는 동의한 회원을 대상으로 계절별 프로모션 음료 소개, 리워드 별 추가 이벤트 e-쿠폰 발송 마케팅 메일 및 광고 문자메시지를 전송합니다."
       }
     ],
     riskFactors: [
       {
-        id: "fin-risk-1",
-        title: "개인 금융 데이터 모니터링",
-        description: "자산 관리 리포트 제공을 위해 계좌 잔액 변동 추이가 안전하게 분석되지만, 민감한 개인 금융 현황이 서비스 데이터베이스에 일시적으로 축적됩니다.",
+        id: "star-risk-1",
+        title: "프로모션 강권 마케팅 정보 유입",
+        description: "신상품 출시 시 메일이나 광고 SMS가 주기적으로 발송될 수 있으나, 사생활 유출과 같은 치명적인 보안 리스크는 매우 낮습니다.",
         level: "safe",
-        relatedTermId: "fin-opt-benefit",
-        resolvedMessage: "자산 관리 알림 해제로 계좌 모니터링 분석 및 관련 DB 누적 가능성을 원천 차단했습니다.",
-        fullClauseText: "제5조 (자산 현황 정보 활용) SecurePay는 자산 관리 혜택 및 소비 가이드 기능을 연동한 사용자에 한하여 연동된 전 은행 잔고 추이, 실시간 소비 대행 내역, 변동 금리 상환 상태를 지속적으로 모니터링하고 분석용 데이터베이스에 저장합니다.",
-        dangerSegment: "은행 잔고 추이, 실시간 소비 대행 내역, 변동 금리 상환 상태를 지속적으로 모니터링하고 분석용 데이터베이스에 저장",
-        aiAnalysisComment: "금융 자산 관리 추천을 제공하기 위한 목적으로, 모든 수입/지출 내역과 실시간 계좌 잔고 데이터를 주기적으로 감시하고 DB에 로깅하는 개인 자산 모니터링 현상이 유발됩니다.",
-        remedyActionTip: "가입 폼에서 '[선택] 자산 관리 및 자산 추천 혜택 알림 동의' 체크박스를 끄고 가입하시면 모니터링 수집이 정지되어 안전합니다."
+        relatedTermId: "star-opt-marketing",
+        resolvedMessage: "마케팅 수신동의를 해제하여 광고성 e-메일 및 불필요한 푸시 유입을 원천 방지했습니다.",
+        fullClauseText: "제12조 (마케팅 및 프로모션 안내) 에스씨케이컴퍼니는 리워드 혜택 정보를 선택 수신에 동의한 회원에 한하여, 음료 쿠폰 증정, 별 추가 적립 특가 딜 및 시즌별 프로모션 굿즈(다이어리 등) 출시 소식 알림을 SMS 및 메일링으로 전송할 수 있습니다.",
+        dangerSegment: "별 추가 적립 특가 딜 및 시즌별 프로모션 굿즈(다이어리 등) 출시 소식 알림을 SMS 및 메일링으로 전송",
+        aiAnalysisComment: "금융 정보 연동이나 국외 제3자 이전 등이 전혀 없고, 순수한 스타벅스 매장 식음료 이벤트 마케팅 알림에 국한되어 유출 우려가 전혀 없는 매우 안전한 마케팅 조항입니다.",
+        remedyActionTip: "광고성 문자가 귀찮으시다면 '[선택] E-mail 및 SMS 광고성 정보 수신동의'의 체크박스를 꺼 두시면 됩니다."
       }
     ],
     baseSummary: [
-      "금융 보안 규정 및 가이드라인을 엄격히 준수하여 불필요한 제3자 제공이 일체 없습니다.",
-      "마케팅 활용 범위가 매우 제한적이며, 필수 수집 정보 역시 금융 거래를 위한 필수 데이터에만 한정됩니다.",
-      "1차 MVP 시나리오 중 가장 이상적이고 안전한 정보 보호 정책 모델을 갖고 있습니다."
+      "마케팅 활용 및 제3자 공유 범위가 국내 최고 수준으로 좁고 정직하게 보호됩니다.",
+      "선택 항목을 해제하지 않더라도 최대 취약도 점수가 25점에 불과한 매우 모범적인 보안 등급 상태입니다.",
+      "금융사 연동 등의 외부 유출 우려가 없어 사이렌오더와 선불 충전 카드를 안전하게 사용하셔도 무방합니다."
     ],
     collectionItems: [
-      { name: "CI/DI 본인 인증 고유식별 값", required: true, type: "본인 인증용 필수", relatedTermId: "fin-req-identity" },
-      { name: "연동 계좌번호 및 은행 식별 정보", required: true, type: "송금/결제용 필수", relatedTermId: "fin-req-identity" },
-      { name: "통합 계좌 잔액 및 자산 변동 정보", required: false, type: "자산 관리 추천용 선택", relatedTermId: "fin-opt-benefit" }
+      { name: "이메일 주소, 닉네임, 생년월일, 휴대전화번호", required: true, type: "사이렌오더 필수" },
+      { name: "스타벅스 충전 금액 및 결제 수단 승인값", required: true, type: "결제처리 필수" },
+      { name: "프로모션 쿠폰 및 혜택 발송 이력", required: false, type: "혜택알림 선택", relatedTermId: "star-opt-marketing" }
     ]
   }
 ];
