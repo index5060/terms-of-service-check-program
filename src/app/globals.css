@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F2F4F6;
+  --foreground: #191F28;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-blue-toss: #3182F6;
+  --color-blue-toss-dark: #1b64da;
+  --color-blue-toss-light: #E8F3FF;
+  --color-green-safe: #12B76A;
+  --color-green-safe-light: #D1FADF;
+  --color-yellow-warn: #F79009;
+  --color-yellow-warn-light: #FEF0C7;
+  --color-red-danger: #F04438;
+  --color-red-danger-light: #FEE4E2;
+  
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans Ko", sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Hide Scrollbar classes */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
