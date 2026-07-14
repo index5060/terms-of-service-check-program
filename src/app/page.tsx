@@ -79,7 +79,7 @@ export default function Home() {
     
     currentScenario.terms.forEach(term => {
       if (allChecked) {
-        nextAgreed[term.id] = term.required; // 필수만 남기고 선택은 해제
+        nextAgreed[term.id] = false; // 필수/선택 상관없이 모두 해제
       } else {
         nextAgreed[term.id] = true;
       }
