@@ -63,6 +63,7 @@ export default function Home() {
     setIsSignupComplete(false);
     setDetailTerm(null);
     setDetailRisk(null);
+    setShowCriteriaModal(false);
   }, [currentScenario]);
 
   // 체크박스 클릭 핸들러
@@ -426,9 +427,16 @@ export default function Home() {
                 </svg>
 
                 {/* 게이지 중앙 점수 */}
-                <div className="absolute text-center">
-                  <p className="text-[9px] text-gray-700 font-bold">보안 취약도</p>
-                  <p className="text-3xl font-black text-gray-900 tracking-tight">{currentScore}</p>
+                <div className="absolute text-center flex flex-col items-center">
+                  <button 
+                    onClick={() => setShowCriteriaModal(true)}
+                    className="text-[9px] text-gray-500 hover:text-blue-toss font-bold flex items-center gap-0.5 transition-colors cursor-pointer border-none bg-transparent p-0"
+                    title="산정 기준 보기"
+                  >
+                    <span>보안 취약도</span>
+                    <HelpCircle size={10} />
+                  </button>
+                  <p className="text-3xl font-black text-gray-900 tracking-tight leading-none my-0.5">{currentScore}</p>
                   <div className="flex justify-center mt-0.5">
                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${riskInfo.bg} ${riskInfo.color}`}>
                       {riskInfo.label}
@@ -442,6 +450,55 @@ export default function Home() {
                 <span className="flex items-center gap-1 text-green-safe"><span className="w-1.5 h-1.5 rounded-full bg-green-safe"></span> 안전</span>
                 <span className="flex items-center gap-1 text-yellow-warn"><span className="w-1.5 h-1.5 rounded-full bg-yellow-warn"></span> 주의</span>
                 <span className="flex items-center gap-1 text-red-danger"><span className="w-1.5 h-1.5 rounded-full bg-red-danger"></span> 위험</span>
+              </div>
+            </div>
+
+            {/* 실시간 취약도 차감 내역 */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
+                <Shield size={12} className="text-blue-toss" /> 실시간 점수 차감 내역
+              </h4>
+              <div className="bg-white border border-gray-150 rounded-2xl p-4 space-y-3 shadow-2xs text-[11px]">
+                <div className="flex justify-between items-center text-gray-700 font-medium">
+                  <span>기본 위험도 ({currentScenario.title} 전체 동의)</span>
+                  <span className="font-bold text-gray-900">+{currentScenario.baseScore}점</span>
+                </div>
+                
+                {(() => {
+                  const inactiveTerms = currentScenario.terms.filter(term => !term.required && !agreedTermIds[term.id]);
+                  if (inactiveTerms.length === 0) {
+                    return (
+                      <div className="bg-blue-toss-light/50 border border-blue-toss/10 p-3 rounded-xl text-[10px] text-blue-toss font-semibold text-center leading-relaxed">
+                        💡 아래 선택 약관 동의를 해제하면 위험 점수가 낮아집니다. (점수 감점 적용)
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-2 border-t border-b border-gray-100 py-2.5">
+                      {inactiveTerms.map(term => (
+                        <div key={term.id} className="flex justify-between items-center text-green-safe font-semibold font-sans">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-safe"></span>
+                            {term.title.replace(/\[선택\]\s*/, "")} 해제
+                          </span>
+                          <span>-{term.impactScore}점</span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                <div className="flex justify-between items-center pt-2.5 border-t border-dashed border-gray-200 font-sans">
+                  <span className="font-bold text-gray-900">최종 보안 취약도</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${riskInfo.bg} ${riskInfo.color}`}>
+                      {riskInfo.label}
+                    </span>
+                    <span className={`${riskInfo.color} text-base font-black`}>
+                      {currentScore}점
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -728,9 +785,133 @@ export default function Home() {
             <div className="px-6 py-4 border-t border-gray-150">
               <button
                 onClick={() => setDetailRisk(null)}
-                className="w-full bg-blue-toss text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark select-none"
+                className="w-full bg-blue-toss text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark select-none cursor-pointer"
               >
                 진단 결과 확인 완료
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. [신규 추가] 위험도 점수 산정 기준 안내 모달 */}
+      {showCriteriaModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-2xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
+            
+            {/* 헤더 */}
+            <div className="bg-gray-50 px-6 py-5 border-b border-gray-150 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-blue-toss">
+                <Shield size={20} />
+                <h3 className="font-extrabold text-base text-gray-900">GuardTerms 취약도 점수 산정 기준</h3>
+              </div>
+              <button 
+                onClick={() => setShowCriteriaModal(false)}
+                className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            {/* 바디 */}
+            <div className="p-6 space-y-6 max-h-[480px] overflow-y-auto no-scrollbar">
+              
+              {/* 설명 */}
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Scoring Framework</p>
+                <p className="text-xs text-gray-700 leading-relaxed font-medium">
+                  GuardTerms 취약도 점수는 사용자가 약관에 가입할 때 노출되는 개인정보 유출 및 권리 침해 요소를 수치화한 지표입니다. 점수가 낮을수록 개인정보 주권이 더 잘 보호되고 있음을 의미합니다.
+                </p>
+              </div>
+
+              {/* 산식 */}
+              <div className="bg-blue-toss-light border border-blue-toss/10 p-4.5 rounded-2xl space-y-2">
+                <p className="text-xs font-bold text-blue-toss flex items-center gap-1">
+                  💡 점수 산출 공식
+                </p>
+                <div className="text-xs text-gray-900 font-semibold leading-relaxed space-y-1.5">
+                  <div className="flex justify-between border-b border-blue-toss/10 pb-1.5">
+                    <span>기본 위험도 점수 (전체 동의 시)</span>
+                    <span>서비스별 상이 (15 ~ 89점)</span>
+                  </div>
+                  <div className="flex justify-between text-green-safe">
+                    <span>선택 약관 해제에 따른 차감 점수</span>
+                    <span>개별 항목당 -5 ~ -24점</span>
+                  </div>
+                  <div className="pt-1.5 flex justify-between text-blue-toss font-extrabold border-t border-blue-toss/20">
+                    <span>최종 취약도 점수</span>
+                    <span>기본 위험도 - 차감 점수 합계</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 등급표 */}
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-gray-900 flex items-center gap-1">
+                  📊 취약도 등급 기준 및 의미
+                </p>
+                <div className="space-y-2.5">
+                  
+                  {/* 안전 */}
+                  <div className="flex gap-3.5 p-3.5 border border-green-safe/15 bg-green-safe-light/5 rounded-2xl">
+                    <div className="w-8 h-8 rounded-full bg-green-safe-light flex items-center justify-center text-green-safe shrink-0">
+                      <ShieldCheck size={18} />
+                    </div>
+                    <div className="space-y-1 font-sans">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-900">안전 등급</span>
+                        <span className="text-[10px] font-bold text-green-safe bg-green-safe-light px-1.5 py-0.2 rounded-md">0 ~ 35점</span>
+                      </div>
+                      <p className="text-[11px] text-gray-700 leading-relaxed font-medium">
+                        개인정보 수집 범위가 필수적인 서비스 기능에 한정되며, 무단 제3자 제공이나 실시간 동선 추적과 같은 심각한 프라이버시 침해 조항이 전혀 없거나 전부 차단된 가장 안전한 상태입니다.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 주의 */}
+                  <div className="flex gap-3.5 p-3.5 border border-yellow-warn/15 bg-yellow-warn-light/5 rounded-2xl">
+                    <div className="w-8 h-8 rounded-full bg-yellow-warn-light flex items-center justify-center text-yellow-warn shrink-0">
+                      <AlertTriangle size={18} />
+                    </div>
+                    <div className="space-y-1 font-sans">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-900">주의 등급</span>
+                        <span className="text-[10px] font-bold text-yellow-warn bg-yellow-warn-light px-1.5 py-0.2 rounded-md">36 ~ 70점</span>
+                      </div>
+                      <p className="text-[11px] text-gray-700 leading-relaxed font-medium">
+                        선택 마케팅 활용 동의, 제휴 카드 연동 등 개인 맞춤화 혜택 제공 조항이 일부 포함된 상태입니다. 실시간 사생활 위협은 낮지만 빈번한 타겟 문자 스팸이나 마케팅 전화를 유발할 수 있습니다.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 위험 */}
+                  <div className="flex gap-3.5 p-3.5 border border-red-danger/15 bg-red-danger-light/5 rounded-2xl">
+                    <div className="w-8 h-8 rounded-full bg-red-danger-light flex items-center justify-center text-red-danger shrink-0">
+                      <ShieldAlert size={18} />
+                    </div>
+                    <div className="space-y-1 font-sans">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-900">위험 등급</span>
+                        <span className="text-[10px] font-bold text-red-danger bg-red-danger-light px-1.5 py-0.2 rounded-md">71 ~ 100점</span>
+                      </div>
+                      <p className="text-[11px] text-gray-700 leading-relaxed font-medium">
+                        백그라운드 상태의 무작동 GPS 실시간 위치 트래킹, 암호화되지 않은 해외 마케팅 제3자 데이터 무단 이전 등 매우 심각한 수준의 독소 조항이 작동 중인 상태입니다. 가급적 가입 전 선택 체크 해제를 적극 권장합니다.
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+            
+            {/* 푸터 */}
+            <div className="px-6 py-4 border-t border-gray-150">
+              <button
+                onClick={() => setShowCriteriaModal(false)}
+                className="w-full bg-blue-toss text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark cursor-pointer select-none"
+              >
+                기준 안내 확인 완료
               </button>
             </div>
           </div>
