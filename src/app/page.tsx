@@ -17,46 +17,46 @@ import {
   X, 
   RefreshCw, 
   Info, 
-  Smartphone, 
   AlertTriangle,
-  ArrowRight,
-  UserCheck,
   Lock,
-  ArrowLeft
+  ArrowLeft,
+  Globe,
+  Sparkles
 } from "lucide-react";
 
 export default function Home() {
   // 1. 현재 활성화된 시나리오 관리
   const [currentScenario, setCurrentScenario] = useState<Scenario>(SCENARIOS[0]);
   
-  // 2. 동의한 약관 ID 목록 관리 (각 시나리오의 약관 상태)
+  // 2. 동의한 약관 ID 목록 관리
   const [agreedTermIds, setAgreedTermIds] = useState<Record<string, boolean>>({});
 
-  // 3. 바텀 시트 열림 상태 (가상 폰 내부에서 약관 동의 팝업)
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(true);
+  // 3. 확장 프로그램 사이드바 오픈 여부
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
-  // 4. 가상 가입 완료 상태
+  // 4. 가입 완료 상태
   const [isSignupComplete, setIsSignupComplete] = useState(false);
 
   // 5. 약관 세부정보 모달에 노출할 약관 객체
   const [detailTerm, setDetailTerm] = useState<Term | null>(null);
 
+  // 6. 확장 프로그램 설치 안내 모달 상태
+  const [showWelcomeMsg, setShowWelcomeMsg] = useState(true);
+
   // 시나리오 변경 시 초기 세팅
   useEffect(() => {
-    // 기본적으로 모든 약관(필수 및 선택)이 동의된 상태에서 시작하여 위험도를 보여줌
     const initialAgreed: Record<string, boolean> = {};
     currentScenario.terms.forEach(term => {
-      initialAgreed[term.id] = true;
+      initialAgreed[term.id] = true; // 기본적으로 모든 약관 동의로 시작하여 위험 감지를 체감하게 유도
     });
     setAgreedTermIds(initialAgreed);
-    setIsBottomSheetOpen(true);
+    setIsSidebarOpen(true);
     setIsSignupComplete(false);
     setDetailTerm(null);
   }, [currentScenario]);
 
   // 체크박스 클릭 핸들러
   const handleTermToggle = (termId: string) => {
-    // 필수 약관은 체크 해제 불가하도록 처리 가능하나, 시뮬레이션을 위해 필수 약관은 해제 불가능하게 하거나 경고
     const term = currentScenario.terms.find(t => t.id === termId);
     if (!term) return;
     
@@ -77,11 +77,10 @@ export default function Home() {
     const nextAgreed: Record<string, boolean> = {};
     
     currentScenario.terms.forEach(term => {
-      // 이미 모두 동의되어 있다면 필수만 남기고 선택은 해제, 그렇지 않다면 전부 동의
       if (allChecked) {
-        nextAgreed[term.id] = term.required; // 필수만 true, 선택은 false
+        nextAgreed[term.id] = term.required; // 필수만 남기고 선택은 해제
       } else {
-        nextAgreed[term.id] = true; // 전부 true
+        nextAgreed[term.id] = true;
       }
     });
     setAgreedTermIds(nextAgreed);
@@ -91,7 +90,6 @@ export default function Home() {
   const calculateScore = () => {
     let score = currentScenario.baseScore;
     currentScenario.terms.forEach(term => {
-      // 선택 약관이 동의 해제(false)되었을 때 그 영향 점수만큼 차감
       if (!term.required && !agreedTermIds[term.id]) {
         score -= term.impactScore;
       }
@@ -103,525 +101,442 @@ export default function Home() {
 
   // 점수에 따른 위험 등급 분석
   const getRiskLevel = (score: number) => {
-    if (score >= 71) return { label: "위험", color: "text-red-danger", bg: "bg-red-danger-light", border: "border-red-danger/20", fill: "#F04438", icon: ShieldAlert };
-    if (score >= 36) return { label: "주의", color: "text-yellow-warn", bg: "bg-yellow-warn-light", border: "border-yellow-warn/20", fill: "#F79009", icon: AlertTriangle };
-    return { label: "안전", color: "text-green-safe", bg: "bg-green-safe-light", border: "border-green-safe/20", fill: "#12B76A", icon: ShieldCheck };
+    if (score >= 71) return { label: "위험", color: "text-red-danger", bg: "bg-red-danger-light", border: "border-red-danger/25", fill: "#F04438", icon: ShieldAlert };
+    if (score >= 36) return { label: "주의", color: "text-yellow-warn", bg: "bg-yellow-warn-light", border: "border-yellow-warn/25", fill: "#F79009", icon: AlertTriangle };
+    return { label: "안전", color: "text-green-safe", bg: "bg-green-safe-light", border: "border-green-safe/25", fill: "#12B76A", icon: ShieldCheck };
   };
 
   const riskInfo = getRiskLevel(currentScore);
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen">
-      {/* 1. 상단 GNB (GuardTerms 로고) */}
-      <header className="bg-white border-b border-gray-100 py-4 px-6 sticky top-0 z-40 shadow-xs">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-toss flex items-center justify-center text-white font-bold text-lg">
-              G
+    <div className="flex-1 flex flex-col min-h-screen bg-[#F2F4F6] relative overflow-x-hidden">
+      
+      {/* 1. 상단 GNB 및 시나리오 스위처 */}
+      <header className="bg-white border-b border-gray-150 py-3 px-6 sticky top-0 z-40 shadow-2xs">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-toss flex items-center justify-center text-white shadow-xs">
+              <Globe size={20} />
             </div>
             <div>
-              <span className="font-bold text-lg text-gray-900">GuardTerms</span>
-              <span className="text-xs text-blue-toss font-semibold ml-2 bg-blue-toss-light px-1.5 py-0.5 rounded-sm">1차 MVP 데모</span>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-base text-gray-900 tracking-tight">GuardTerms</span>
+                <span className="text-[10px] text-blue-toss font-bold bg-blue-toss-light px-2 py-0.5 rounded-md">
+                  Extension Prototype
+                </span>
+              </div>
+              <p className="text-[10px] text-gray-500 font-medium">크롬 확장 프로그램 시뮬레이터</p>
             </div>
           </div>
-          <div className="text-xs text-gray-500 font-medium">
-            약관 요약 및 개인정보 탈취 위험 진단 서비스
-          </div>
-        </div>
-      </header>
 
-      {/* 2. 메인 바디 컨테이너 */}
-      <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
-        
-        {/* 안내 배너 */}
-        <div className="bg-white p-5 rounded-2xl shadow-xs border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="font-bold text-lg text-gray-900">💡 약관 동의 조절에 따른 위험도 시뮬레이션</h1>
-            <p className="text-sm text-gray-700">
-              상단 탭에서 가상 서비스 시나리오를 고르고, 왼쪽 스마트폰 프레임 내부에서 <b>선택 약관을 끄고 켜보세요</b>.
-              오른쪽 리포트에 위험 요소와 개인정보 수집 목록이 실시간으로 동기화됩니다.
-            </p>
+          {/* 시나리오 전환기 */}
+          <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto max-w-md">
+            {SCENARIOS.map((sc) => {
+              const isActive = currentScenario.id === sc.id;
+              return (
+                <button
+                  key={sc.id}
+                  onClick={() => setCurrentScenario(sc)}
+                  className={`flex-1 sm:flex-none py-1.5 px-3 sm:px-4 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all duration-200 ${
+                    isActive 
+                      ? "bg-white text-blue-toss shadow-xs" 
+                      : "text-gray-700 hover:text-gray-900"
+                  }`}
+                >
+                  <span>{sc.emoji}</span>
+                  <span>{sc.title}</span>
+                </button>
+              );
+            })}
           </div>
+
+          {/* 리셋 단추 */}
           <button 
             onClick={() => {
-              // 초기화
               const initialAgreed: Record<string, boolean> = {};
               currentScenario.terms.forEach(term => {
                 initialAgreed[term.id] = true;
               });
               setAgreedTermIds(initialAgreed);
-              setIsBottomSheetOpen(true);
               setIsSignupComplete(false);
-            }} 
-            className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors self-start sm:self-auto"
+              setIsSidebarOpen(true);
+            }}
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            <RefreshCw size={14} />
-            상태 초기화
+            <RefreshCw size={12} />
+            시나리오 초기화
           </button>
         </div>
+      </header>
 
-        {/* 시나리오 선택기 */}
-        <div className="flex bg-gray-200/60 p-1.5 rounded-2xl gap-1">
-          {SCENARIOS.map((sc) => {
-            const isActive = currentScenario.id === sc.id;
-            return (
-              <button
-                key={sc.id}
-                onClick={() => setCurrentScenario(sc)}
-                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all duration-200 ${
-                  isActive 
-                    ? "bg-white text-blue-toss shadow-xs" 
-                    : "text-gray-700 hover:text-gray-900 hover:bg-white/50"
-                }`}
-              >
-                <span className="text-xl">{sc.emoji}</span>
-                <span className="hidden sm:inline">{sc.title}</span>
-                <span className="text-xs font-normal text-gray-400">({sc.category.split(" ")[0]})</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 메인 레이아웃 (좌: 가상폰 시뮬레이터, 우: GuardTerms 대시보드) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* [좌] 가상폰 시뮬레이터 */}
-          <section className="lg:col-span-5 flex flex-col items-center">
-            <span className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider flex items-center gap-1">
-              <Smartphone size={12} /> 가상 서비스 가입 시나리오 폰
+      {/* 안내 알림 바 */}
+      {showWelcomeMsg && (
+        <div className="bg-blue-toss text-white py-2.5 px-6 relative z-30 flex items-center justify-between text-xs font-semibold shadow-xs">
+          <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Sparkles size={14} className="animate-spin" />
+              <span>확장 프로그램 데모: 왼쪽 웹사이트에서 동의 체크를 해제하면, 우측 GuardTerms 확장 프로그램 패널이 실시간 분석합니다.</span>
             </span>
+            <button onClick={() => setShowWelcomeMsg(false)} className="hover:opacity-75 pl-4">
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
-            {/* 스마트폰 프레임 */}
-            <div className="w-full max-w-[360px] bg-white border-[8px] border-gray-900 rounded-[44px] shadow-2xl relative overflow-hidden aspect-[9/19] flex flex-col">
-              
-              {/* 폰 상단 상태바 (iOS 스타일) */}
-              <div className="h-10 bg-white px-6 flex items-center justify-between text-[11px] font-bold text-gray-900 select-none z-10">
-                <span>1:32</span>
-                {/* 노치 디자인 구멍 */}
-                <div className="w-24 h-4 bg-gray-900 rounded-b-xl absolute left-1/2 -translate-x-1/2 top-0"></div>
-                <div className="flex items-center gap-1.5">
-                  <span>SKT</span>
-                  <div className="w-4 h-2 bg-gray-900 rounded-xs"></div>
+      {/* 2. 메인 컨텐츠 영역 (좌측: 웹 페이지 전체 가입 양식, 우측: 확장 프로그램 사이드바) */}
+      <div className={`flex-1 flex w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 transition-all duration-300 ${isSidebarOpen ? "pr-[400px]" : "pr-4"}`}>
+        
+        {/* [좌] 가상 웹 회원가입 페이지 */}
+        <main className="flex-1 bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[680px]">
+          
+          {/* 가상 브라우저 상단 주소창 띠 */}
+          <div className="bg-gray-50 border-b border-gray-150 py-3 px-6 flex items-center gap-3">
+            <div className="flex gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-red-danger/40 inline-block"></span>
+              <span className="w-3 h-3 rounded-full bg-yellow-warn/40 inline-block"></span>
+              <span className="w-3 h-3 rounded-full bg-green-safe/40 inline-block"></span>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-lg px-4 py-1.5 text-xs text-gray-500 font-medium flex-1 max-w-lg flex items-center gap-1.5">
+              <Lock size={12} className="text-green-safe" />
+              <span>https://www.</span>
+              <span className="text-gray-900 font-bold">{currentScenario.title.toLowerCase()}</span>
+              <span>.com/signup</span>
+            </div>
+            <span className="text-[10px] text-gray-400 font-semibold bg-gray-200 px-2 py-0.5 rounded-xs">가상 페이지</span>
+          </div>
+
+          {/* 가상 가입 화면 콘텐츠 */}
+          <div className="flex-1 p-8 sm:p-12 max-w-2xl mx-auto w-full flex flex-col justify-between">
+            {!isSignupComplete ? (
+              <div className="space-y-8">
+                
+                {/* 헤더 */}
+                <div className="space-y-3">
+                  <span className="text-xl">{currentScenario.emoji}</span>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
+                    {currentScenario.title} 회원가입
+                  </h2>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    회원 정보를 기입하고 아래 약관에 동의하여 가입 절차를 마무리해 주세요.
+                  </p>
                 </div>
-              </div>
 
-              {/* 가상 앱 콘텐츠 영역 */}
-              <div className="flex-1 flex flex-col overflow-y-auto no-scrollbar relative bg-white px-6 pb-6 pt-2">
-                {/* 가상 서비스 탑 헤더 */}
-                <div className="flex items-center py-2 mb-6">
-                  <ArrowLeft size={20} className="text-gray-900 cursor-pointer" />
-                  <span className="ml-4 font-bold text-sm text-gray-500">{currentScenario.category}</span>
-                </div>
-
-                {!isSignupComplete ? (
-                  /* 가입 폼 화면 */
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-900 leading-tight">
-                          {currentScenario.title}에<br />
-                          가입을 환영합니다
-                        </h2>
-                        <p className="text-xs text-gray-700">
-                          간단한 이메일 인증으로 가입할 수 있어요.
-                        </p>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-gray-700">이메일 주소</label>
-                          <input 
-                            type="email" 
-                            placeholder="example@email.com" 
-                            disabled
-                            value={currentScenario.id === "sns" ? "designer@toss.im" : "buyer@easy.co.kr"}
-                            className="w-full bg-gray-150 border-0 rounded-xl px-4 py-3 text-sm text-gray-700 font-medium focus:ring-2 focus:ring-blue-toss"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-gray-700">비밀번호</label>
-                          <input 
-                            type="password" 
-                            value="••••••••••••" 
-                            disabled
-                            className="w-full bg-gray-150 border-0 rounded-xl px-4 py-3 text-sm text-gray-700 focus:ring-2 focus:ring-blue-toss"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-8 space-y-3">
-                      {/* GuardTerms 요약 미리보기 플로팅 카드 */}
-                      <div className="bg-blue-toss-light/70 border border-blue-toss/10 rounded-2xl p-3.5 flex items-center justify-between shadow-xs">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center`} style={{ backgroundColor: riskInfo.fill }}>
-                            <riskInfo.icon size={18} className="text-white animate-pulse" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold text-blue-toss">GuardTerms 분석 진단</p>
-                            <p className="text-xs font-bold text-gray-900">
-                              위험 지수 <span className={riskInfo.color}>{currentScore}점</span> ({riskInfo.label})
-                            </p>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={() => setIsBottomSheetOpen(true)}
-                          className="bg-white hover:bg-gray-50 text-[10px] font-bold text-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-100 shadow-2xs transition-colors"
-                        >
-                          약관 분석 조절
-                        </button>
-                      </div>
-
-                      <button 
-                        onClick={() => {
-                          const hasRequired = currentScenario.terms.filter(t => t.required).every(t => agreedTermIds[t.id]);
-                          if (!hasRequired) {
-                            alert("필수 약관에 동의하셔야 가입이 진행됩니다.");
-                            setIsBottomSheetOpen(true);
-                            return;
-                          }
-                          setIsSignupComplete(true);
-                        }}
-                        className="w-full bg-blue-toss text-white font-bold py-4 rounded-2xl text-sm transition-all shadow-xs hover:bg-blue-toss-dark active:scale-[0.98]"
-                      >
-                        가입 완료하기
-                      </button>
-                    </div>
+                {/* 계정 정보 폼 */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700">아이디 (이메일)</label>
+                    <input 
+                      type="email" 
+                      placeholder="example@domain.com" 
+                      disabled
+                      value={currentScenario.id === "sns" ? "designer@toss.im" : "buyer@easy.co.kr"}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-700 focus:outline-none"
+                    />
                   </div>
-                ) : (
-                  /* 가입 완료 화면 */
-                  <div className="flex-1 flex flex-col justify-between items-center py-10">
-                    <div className="text-center space-y-6 flex-1 flex flex-col justify-center items-center">
-                      <div className="w-20 h-20 bg-blue-toss-light rounded-full flex items-center justify-center text-blue-toss mb-2 shadow-inner">
-                        <UserCheck size={40} className="animate-bounce" />
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-gray-900">가입이 완료되었습니다!</h3>
-                        <p className="text-xs text-gray-700 max-w-[240px] mx-auto leading-relaxed">
-                          {currentScenario.title} 회원가입을 축하드립니다.<br />
-                          GuardTerms 진단 결과 사용자님은 
-                          <span className={`font-bold ml-1 ${riskInfo.color}`}>{currentScore}점 ({riskInfo.label})</span>의 위험도로 안전하게 개인정보 설정을 최적화하여 가입했습니다.
-                        </p>
-                      </div>
-                    </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700">비밀번호</label>
+                    <input 
+                      type="password" 
+                      disabled
+                      value="password1234"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:outline-none"
+                    />
+                  </div>
+                </div>
 
+                {/* 약관 동의 폼 영역 */}
+                <div className="space-y-4 border border-gray-150 rounded-2xl p-5 bg-gray-50/50">
+                  <div className="border-b border-gray-150 pb-4 mb-4 flex items-center justify-between">
+                    <span className="font-extrabold text-sm text-gray-900">이용 약관 및 필수/선택 동의</span>
                     <button 
-                      onClick={() => setIsSignupComplete(false)}
-                      className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3.5 rounded-2xl text-sm transition-colors"
+                      onClick={handleSelectAll}
+                      className="text-xs font-bold text-blue-toss hover:text-blue-toss-dark transition-colors"
                     >
-                      다시 동의 조절해보기
+                      {currentScenario.terms.every(term => agreedTermIds[term.id]) ? "전체 해제" : "전체 동의"}
                     </button>
                   </div>
-                )}
 
-                {/* [TOSS STYLE] 약관 동의 바텀 시트 (BottomSheet) */}
-                {isBottomSheetOpen && !isSignupComplete && (
-                  <div className="absolute inset-0 bg-black/40 backdrop-blur-xs z-20 flex flex-col justify-end transition-opacity duration-300">
-                    
-                    {/* 뒷배경 클릭 시 닫기 */}
-                    <div className="absolute inset-0" onClick={() => setIsBottomSheetOpen(false)}></div>
-
-                    {/* 바텀 시트 컨테이너 */}
-                    <div className="bg-white rounded-t-[28px] max-h-[85%] overflow-hidden flex flex-col relative z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] animate-slide-up">
-                      
-                      {/* 드래그 핸들러 목업 */}
-                      <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto my-3 flex-shrink-0"></div>
-
-                      <div className="px-6 pb-6 overflow-y-auto no-scrollbar flex-1 flex flex-col justify-between">
-                        <div>
-                          {/* 타이틀 영역 */}
-                          <div className="mb-6 space-y-1">
-                            <h3 className="text-lg font-bold text-gray-900 leading-snug">
-                              {currentScenario.title} 가입을 위해<br />
-                              동의가 필요해요
-                            </h3>
-                            <p className="text-[11px] text-gray-500 font-medium">
-                              선택 약관을 해제하면 개인정보 탈취 지수가 하락합니다.
-                            </p>
-                          </div>
-
-                          {/* 전체 동의 영역 */}
+                  {/* 약관 리스트 */}
+                  <div className="space-y-3.5">
+                    {currentScenario.terms.map((term) => {
+                      const isChecked = !!agreedTermIds[term.id];
+                      return (
+                        <div key={term.id} className="flex items-center justify-between bg-white border border-gray-150 rounded-xl p-3.5 shadow-2xs">
                           <div 
-                            onClick={handleSelectAll}
-                            className="flex items-center gap-3 py-4 border-b border-gray-100 cursor-pointer select-none"
+                            onClick={() => handleTermToggle(term.id)}
+                            className="flex items-start gap-3 flex-1 cursor-pointer select-none"
                           >
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all ${
-                              currentScenario.terms.every(term => agreedTermIds[term.id])
+                            <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center border mt-0.5 transition-all ${
+                              isChecked
                                 ? "bg-blue-toss border-blue-toss text-white"
-                                : "border-gray-300 text-transparent"
+                                : "border-gray-200 text-transparent"
                             }`}>
-                              <Check size={14} strokeWidth={3} />
+                              <Check size={12} strokeWidth={3} />
                             </div>
-                            <span className="font-bold text-sm text-gray-900">약관 전체 동의하기</span>
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`text-xs font-bold ${term.required ? "text-gray-900" : "text-gray-700"}`}>
+                                  {term.title}
+                                </span>
+                                {term.required ? (
+                                  <span className="text-[9px] font-bold bg-red-danger-light text-red-danger px-1 rounded-sm">필수</span>
+                                ) : (
+                                  <span className="text-[9px] font-bold bg-gray-200 text-gray-700 px-1 rounded-sm">선택</span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-gray-700 mt-1">
+                                {term.description}
+                              </span>
+                            </div>
                           </div>
 
-                          {/* 개별 약관 리스트 */}
-                          <div className="py-4 space-y-4">
-                            {currentScenario.terms.map((term) => {
-                              const isChecked = !!agreedTermIds[term.id];
-                              return (
-                                <div key={term.id} className="flex items-center justify-between">
-                                  <div 
-                                    onClick={() => handleTermToggle(term.id)}
-                                    className="flex items-center gap-3 flex-1 cursor-pointer select-none py-1"
-                                  >
-                                    <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center border transition-all ${
-                                      isChecked
-                                        ? "bg-blue-toss border-blue-toss text-white"
-                                        : "border-gray-200 text-transparent"
-                                    }`}>
-                                      <Check size={12} strokeWidth={3} />
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <span className={`text-xs font-semibold ${term.required ? "text-gray-900" : "text-gray-700"}`}>
-                                        {term.title}
-                                      </span>
-                                      <span className="text-[10px] text-gray-700 mt-0.5">
-                                        {term.description}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  <button 
-                                    onClick={() => setDetailTerm(term)}
-                                    className="text-gray-700 hover:bg-gray-50 p-1.5 rounded-lg transition-colors"
-                                  >
-                                    <ChevronRight size={16} />
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* 시트 하단 버튼 */}
-                        <div className="pt-4 flex gap-2">
-                          <button
-                            onClick={() => {
-                              const hasRequired = currentScenario.terms.filter(t => t.required).every(t => agreedTermIds[t.id]);
-                              if (!hasRequired) {
-                                alert("필수 약관에 동의하셔야 가입이 진행됩니다.");
-                                return;
-                              }
-                              setIsBottomSheetOpen(false);
-                            }}
-                            className="flex-1 bg-blue-toss text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark"
+                          <button 
+                            onClick={() => setDetailTerm(term)}
+                            className="text-gray-700 hover:bg-gray-100 p-2 rounded-lg transition-colors flex items-center gap-1 text-[10px] font-bold"
                           >
-                            확인 완료
+                            <span>약관 보기</span>
+                            <ChevronRight size={14} />
                           </button>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* 폰 하단 홈 바 목업 */}
-              <div className="h-6 bg-white flex items-center justify-center select-none pb-2">
-                <div className="w-32 h-1 bg-gray-900 rounded-full"></div>
+                {/* 가입 버튼 */}
+                <button
+                  onClick={() => {
+                    const hasRequired = currentScenario.terms.filter(t => t.required).every(t => agreedTermIds[t.id]);
+                    if (!hasRequired) {
+                      alert("가입하려면 모든 필수 약관에 동의하셔야 합니다.");
+                      return;
+                    }
+                    setIsSignupComplete(true);
+                  }}
+                  className="w-full bg-blue-toss hover:bg-blue-toss-dark text-white font-extrabold py-4 rounded-xl text-sm transition-all shadow-xs active:scale-[0.99] select-none"
+                >
+                  동의하고 회원가입 완료
+                </button>
               </div>
+            ) : (
+              /* 가입 완료 화면 */
+              <div className="flex-1 flex flex-col justify-between items-center py-12">
+                <div className="text-center space-y-6 flex-1 flex flex-col justify-center items-center">
+                  <div className="w-20 h-20 bg-blue-toss-light rounded-full flex items-center justify-center text-blue-toss mb-2 shadow-inner">
+                    <Check size={40} className="animate-bounce" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-extrabold text-gray-900">{currentScenario.title} 가입 성공</h3>
+                    <p className="text-sm text-gray-700 max-w-sm mx-auto leading-relaxed">
+                      회원 등록에 성공했습니다!<br />
+                      우측 **GuardTerms Extension** 패널을 보시면 사용자님의 최종 정보 보호 등급이 
+                      <span className={`font-bold ml-1 ${riskInfo.color}`}>{currentScore}점 ({riskInfo.label})</span> 상태로 맞춤 가입된 것을 확인하실 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setIsSignupComplete(false)}
+                  className="w-full max-w-xs bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3.5 rounded-xl text-xs transition-colors"
+                >
+                  가입 화면으로 다시 돌아가기
+                </button>
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* [우] Chrome Extension Sidebar (고정 사이드 패널) */}
+        <aside className={`w-[380px] h-full fixed top-[69px] right-0 bg-white border-l border-gray-200 shadow-2xl flex flex-col transition-transform duration-300 ease-out z-30 ${
+          isSidebarOpen ? "translate-x-0" : "translate-x-full"
+        }`}>
+          
+          {/* 사이드바 헤더 */}
+          <div className="px-5 py-4 border-b border-gray-150 flex items-center justify-between bg-gray-50">
+            <div className="flex items-center gap-2">
+              <Shield size={16} className="text-blue-toss" />
+              <span className="font-extrabold text-xs text-gray-900 tracking-tight uppercase">GuardTerms Analyzer</span>
             </div>
-          </section>
-
-          {/* [우] GuardTerms AI 실시간 위협 대시보드 */}
-          <section className="lg:col-span-7 space-y-6">
             
-            {/* 대시보드 타이틀 */}
-            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="text-gray-700 hover:bg-gray-200 p-1 rounded-lg transition-colors"
+              title="사이드바 숨기기"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* 사이드바 본문 스크롤 영역 */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-6 no-scrollbar pb-16">
+            
+            {/* 시나리오명 */}
+            <div className="bg-gray-50 border border-gray-150 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
               <div>
-                <span className="text-xs font-bold text-blue-toss bg-blue-toss-light px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  Real-time Guard Report
-                </span>
-                <h2 className="text-2xl font-bold text-gray-900 mt-1">GuardTerms AI 분석 보고서</h2>
+                <p className="text-[10px] text-gray-700 font-bold">감지 대상 웹페이지</p>
+                <p className="text-sm font-bold text-gray-900">{currentScenario.title}</p>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-700">분석 대상 서비스</p>
-                <p className="text-sm font-bold text-gray-900 flex items-center gap-1.5 justify-end">
-                  <span>{currentScenario.emoji}</span>
-                  <span>{currentScenario.title}</span>
-                </p>
-              </div>
+              <span className="text-2xl">{currentScenario.emoji}</span>
             </div>
 
-            {/* 메인 리포트 카드 (위험도 점수 게이지 + 요약) */}
-            <div className="bg-white rounded-3xl p-6 shadow-xs border border-gray-100 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* 게이지 및 점수 영역 */}
+            <div className="bg-white border border-gray-150 rounded-2xl p-4 flex flex-col items-center justify-center">
               
-              {/* 왼쪽: 게이지 차트 */}
-              <div className="md:col-span-5 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-100 pb-6 md:pb-0 md:pr-6">
-                <div className="relative w-40 h-40 flex items-center justify-center">
-                  
-                  {/* 도넛형 SVG 게이지 */}
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r="65"
-                      stroke="#F2F4F6"
-                      strokeWidth="12"
-                      fill="transparent"
-                    />
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r="65"
-                      stroke={riskInfo.fill}
-                      strokeWidth="12"
-                      fill="transparent"
-                      strokeDasharray="408.4"
-                      strokeDashoffset={408.4 - (408.4 * currentScore) / 100}
-                      strokeLinecap="round"
-                      className="transition-all duration-500 ease-out"
-                    />
-                  </svg>
+              <div className="relative w-36 h-36 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle
+                    cx="72"
+                    cy="72"
+                    r="58"
+                    stroke="#F2F4F6"
+                    strokeWidth="10"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="72"
+                    cy="72"
+                    r="58"
+                    stroke={riskInfo.fill}
+                    strokeWidth="10"
+                    fill="transparent"
+                    strokeDasharray="364.4"
+                    strokeDashoffset={364.4 - (364.4 * currentScore) / 100}
+                    strokeLinecap="round"
+                    className="transition-all duration-500 ease-out"
+                  />
+                </svg>
 
-                  {/* 게이지 내부 점수 */}
-                  <div className="absolute text-center space-y-0.5">
-                    <p className="text-[11px] text-gray-700 font-bold tracking-wider">개인정보 탈취도</p>
-                    <p className="text-4xl font-extrabold tracking-tight text-gray-900">{currentScore}</p>
-                    <div className="flex justify-center">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${riskInfo.bg} ${riskInfo.color}`}>
-                        {riskInfo.label} 등급
-                      </span>
-                    </div>
+                {/* 게이지 중앙 점수 */}
+                <div className="absolute text-center">
+                  <p className="text-[9px] text-gray-700 font-bold">보안 취약도</p>
+                  <p className="text-3xl font-black text-gray-900 tracking-tight">{currentScore}</p>
+                  <div className="flex justify-center mt-0.5">
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${riskInfo.bg} ${riskInfo.color}`}>
+                      {riskInfo.label}
+                    </span>
                   </div>
                 </div>
-
-                <div className="flex gap-4 text-[10px] font-bold text-gray-500 mt-4">
-                  <span className="flex items-center gap-1 text-green-safe"><span className="w-2 h-2 rounded-full bg-green-safe"></span> 안전 0~35</span>
-                  <span className="flex items-center gap-1 text-yellow-warn"><span className="w-2 h-2 rounded-full bg-yellow-warn"></span> 주의 36~70</span>
-                  <span className="flex items-center gap-1 text-red-danger"><span className="w-2 h-2 rounded-full bg-red-danger"></span> 위험 71~100</span>
-                </div>
               </div>
 
-              {/* 오른쪽: 실시간 AI 요약 */}
-              <div className="md:col-span-7 space-y-4">
-                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                  <Shield size={16} className="text-blue-toss" /> AI 실시간 3줄 정리
-                </h3>
-                <ul className="space-y-3">
-                  {currentScenario.baseSummary.map((sum, index) => {
-                    // SNS 시나리오의 경우 선택 정보 차단에 따른 대체 요약 렌더링
-                    let displaySum = sum;
-                    if (currentScenario.id === "sns") {
-                      if (index === 1 && !agreedTermIds["sns-opt-thirdparty"]) {
-                        displaySum = "✅ [보호됨] 국외 제3자 데이터 제공 거부로, 글로벌 에이전시로의 빅데이터 전송이 완전 중지되었습니다.";
-                      }
-                      if (index === 2 && !agreedTermIds["sns-opt-location"]) {
-                        displaySum = "✅ [보호됨] 위치 권한을 배제하여 물리 동선 추적 및 장소 기반 광고 타겟팅에서 차단되었습니다.";
-                      }
-                    }
-                    // 쇼핑몰 시나리오의 경우
-                    if (currentScenario.id === "shopping") {
-                      if (index === 1 && !agreedTermIds["shop-opt-affiliate"]) {
-                        displaySum = "✅ [보호됨] 제휴 카드사 마케팅 제공을 거부하여 불필요한 금융 발급 권유 노출이 해소되었습니다.";
-                      }
-                    }
-
-                    const isProtected = displaySum.startsWith("✅");
-
-                    return (
-                      <li key={index} className="flex gap-2 text-xs leading-relaxed text-gray-700">
-                        <span className={`text-[10px] w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          isProtected ? "bg-green-safe-light text-green-safe font-bold" : "bg-gray-100 text-gray-500 font-bold"
-                        }`}>
-                          {index + 1}
-                        </span>
-                        <span className={isProtected ? "text-green-safe font-semibold" : ""}>
-                          {displaySum}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+              {/* 신호등 가이드 */}
+              <div className="flex gap-3 text-[9px] font-bold text-gray-500 mt-2">
+                <span className="flex items-center gap-1 text-green-safe"><span className="w-1.5 h-1.5 rounded-full bg-green-safe"></span> 안전</span>
+                <span className="flex items-center gap-1 text-yellow-warn"><span className="w-1.5 h-1.5 rounded-full bg-yellow-warn"></span> 주의</span>
+                <span className="flex items-center gap-1 text-red-danger"><span className="w-1.5 h-1.5 rounded-full bg-red-danger"></span> 위험</span>
               </div>
             </div>
 
-            {/* 주요 감지된 위험 요소 카드 리스트 */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                <AlertTriangle size={16} className="text-yellow-warn" /> 감지된 개인정보 위험 요소 ({
+            {/* AI 3줄 요약 */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
+                  <Sparkles size={12} className="text-blue-toss animate-pulse" /> AI 실시간 3줄 요약
+                </h4>
+              </div>
+              <ul className="space-y-2.5 bg-gray-50 border border-gray-150 p-3.5 rounded-2xl">
+                {currentScenario.baseSummary.map((sum, index) => {
+                  let displaySum = sum;
+                  if (currentScenario.id === "sns") {
+                    if (index === 1 && !agreedTermIds["sns-opt-thirdparty"]) {
+                      displaySum = "🛡️ [차단됨] 국외 제3자 정보 제공이 거부되어 마케팅 데이터 유출 위험이 방지되었습니다.";
+                    }
+                    if (index === 2 && !agreedTermIds["sns-opt-location"]) {
+                      displaySum = "🛡️ [차단됨] 위치 권한 배제로 동선 추적 광고 활용 경로가 폐쇄되었습니다.";
+                    }
+                  }
+                  if (currentScenario.id === "shopping") {
+                    if (index === 1 && !agreedTermIds["shop-opt-affiliate"]) {
+                      displaySum = "🛡️ [차단됨] 제휴 카드 제공을 해제하여 부가 할인 발급 광고를 예방했습니다.";
+                    }
+                  }
+
+                  const isProtected = displaySum.startsWith("🛡️");
+
+                  return (
+                    <li key={index} className="flex gap-2 text-[11px] leading-relaxed text-gray-700">
+                      <span className={`text-[9px] w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold ${
+                        isProtected ? "bg-green-safe-light text-green-safe" : "bg-gray-200 text-gray-500"
+                      }`}>
+                        {index + 1}
+                      </span>
+                      <span className={isProtected ? "text-green-safe font-semibold" : ""}>
+                        {displaySum}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
+            {/* 감지된 위협 분석 */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
+                <AlertTriangle size={12} className="text-yellow-warn" /> 위험 감지 조항 ({
                   currentScenario.riskFactors.filter(rf => agreedTermIds[rf.relatedTermId]).length
                 }건)
-              </h3>
-
-              <div className="grid grid-cols-1 gap-3">
+              </h4>
+              
+              <div className="space-y-2">
                 {currentScenario.riskFactors.map((rf) => {
-                  const isRiskActive = agreedTermIds[rf.relatedTermId]; // 위험이 여전히 활성화(체크되어 있음)
+                  const isActive = agreedTermIds[rf.relatedTermId];
                   return (
                     <div 
-                      key={rf.id} 
-                      className={`p-4 rounded-2xl border transition-all duration-300 ${
-                        isRiskActive 
-                          ? "bg-white border-red-danger/10 shadow-xs" 
-                          : "bg-green-safe-light/10 border-green-safe/10 opacity-75"
+                      key={rf.id}
+                      className={`p-3 rounded-xl border text-[11px] transition-all duration-200 ${
+                        isActive 
+                          ? "bg-white border-red-danger/15 shadow-2xs" 
+                          : "bg-green-safe-light/5 border-green-safe/10 opacity-70"
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
-                              !isRiskActive
-                                ? "bg-green-safe-light text-green-safe"
-                                : rf.level === "danger" 
-                                  ? "bg-red-danger-light text-red-danger" 
-                                  : "bg-yellow-warn-light text-yellow-warn"
-                            }`}>
-                              {!isRiskActive ? "해결됨" : rf.level === "danger" ? "심각" : "경고"}
-                            </span>
-                            <h4 className={`text-sm font-bold ${!isRiskActive ? "text-gray-500 line-through" : "text-gray-900"}`}>
-                              {rf.title}
-                            </h4>
-                          </div>
-                          <p className={`text-xs leading-relaxed ${!isRiskActive ? "text-gray-700" : "text-gray-700"}`}>
-                            {isRiskActive ? rf.description : rf.resolvedMessage}
-                          </p>
-                        </div>
-                        
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          !isRiskActive ? "bg-green-safe text-white" : "bg-gray-100 text-gray-400"
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-xs ${
+                          !isActive
+                            ? "bg-green-safe-light text-green-safe"
+                            : rf.level === "danger" 
+                              ? "bg-red-danger-light text-red-danger" 
+                              : "bg-yellow-warn-light text-yellow-warn"
                         }`}>
-                          {!isRiskActive ? <Check size={16} strokeWidth={3} /> : <Info size={16} />}
-                        </div>
+                          {!isActive ? "보호됨" : rf.level === "danger" ? "심각" : "경고"}
+                        </span>
+                        <span className={`font-bold ${!isActive ? "text-gray-500 line-through" : "text-gray-950"}`}>
+                          {rf.title}
+                        </span>
                       </div>
+                      <p className="text-gray-700 leading-snug">
+                        {isActive ? rf.description : rf.resolvedMessage}
+                      </p>
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* 수집 대상 개인정보 목록 */}
-            <div className="bg-white rounded-3xl p-6 shadow-xs border border-gray-100 space-y-4">
-              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                <Lock size={16} className="text-blue-toss" /> 수집되는 내 개인정보 목록 ({
+            {/* 수집 데이터 내역 */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
+                <Lock size={12} className="text-blue-toss" /> 실시간 개인정보 수집 현황 ({
                   currentScenario.collectionItems.filter(item => !item.relatedTermId || agreedTermIds[item.relatedTermId]).length
                 }개)
-              </h3>
-              
-              <div className="divide-y divide-gray-100">
+              </h4>
+
+              <div className="bg-white border border-gray-150 rounded-2xl p-4 divide-y divide-gray-100 space-y-2.5">
                 {currentScenario.collectionItems.map((item, idx) => {
                   const isCollected = !item.relatedTermId || agreedTermIds[item.relatedTermId];
                   return (
-                    <div key={idx} className="py-3 flex items-center justify-between text-xs transition-opacity duration-300">
-                      <div className="flex items-center gap-2.5">
-                        <span className={`w-2 h-2 rounded-full ${
-                          !isCollected 
-                            ? "bg-gray-300"
-                            : item.required 
-                              ? "bg-red-danger" 
-                              : "bg-blue-toss"
-                        }`}></span>
-                        <span className={`font-semibold ${!isCollected ? "text-gray-400 line-through" : "text-gray-900"}`}>
-                          {item.name}
-                        </span>
-                      </div>
-                      <span className={`font-bold px-2 py-0.5 rounded-md ${
+                    <div key={idx} className="pt-2.5 first:pt-0 flex items-center justify-between text-[11px]">
+                      <span className={`font-medium ${!isCollected ? "text-gray-400 line-through" : "text-gray-900"}`}>
+                        {item.name}
+                      </span>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-xs ${
                         !isCollected
-                          ? "bg-gray-100 text-gray-400"
-                          : item.required 
-                            ? "bg-red-danger-light text-red-danger" 
+                          ? "bg-gray-150 text-gray-400"
+                          : item.required
+                            ? "bg-red-danger-light text-red-danger"
                             : "bg-blue-toss-light text-blue-toss"
                       }`}>
-                        {!isCollected ? "미수집" : item.required ? "필수 수집" : item.type}
+                        {!isCollected ? "수집 안함" : item.required ? "필수" : "선택"}
                       </span>
                     </div>
                   );
@@ -629,22 +544,38 @@ export default function Home() {
               </div>
             </div>
 
-          </section>
-        </div>
-      </main>
+          </div>
 
-      {/* 3. 푸터 */}
-      <footer className="bg-white border-t border-gray-100 py-6 mt-12 text-center text-xs text-gray-500">
-        <p>© 2026 GuardTerms. All rights reserved.</p>
-        <p className="mt-1">Toss Style UX Guide / Tailwind CSS v4 / Next.js 15+ 적용</p>
-      </footer>
+          {/* 사이드바 푸터 */}
+          <div className="absolute bottom-0 left-0 right-0 py-3 bg-gray-50 border-t border-gray-150 text-center text-[10px] text-gray-500">
+            GuardTerms Extension v1.0.0 (Toss Style)
+          </div>
+        </aside>
+      </div>
 
-      {/* 4. 약관 상세보기 모달 (바텀시트에서 화살표 눌렀을 때 실행) */}
+      {/* 3. 우측 하단 플로팅 확장 프로그램 배지 버튼 (사이드바 닫혀있을 때) */}
+      {!isSidebarOpen && (
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-blue-toss hover:bg-blue-toss-dark text-white rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer z-50 animate-bounce"
+          title="GuardTerms 확장 프로그램 열기"
+        >
+          <Shield size={24} />
+          {/* 위협 인디케이터 배지 점 */}
+          <span className={`absolute top-0.5 right-0.5 w-4.5 h-4.5 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold ${
+            riskInfo.fill === "#12B76A" ? "bg-green-safe" : riskInfo.fill === "#F79009" ? "bg-yellow-warn" : "bg-red-danger"
+          }`}>
+            {currentScenario.riskFactors.filter(rf => agreedTermIds[rf.relatedTermId]).length}
+          </span>
+        </button>
+      )}
+
+      {/* 4. 약관 상세보기 팝업 모달 */}
       {detailTerm && (
-        <div className="fixed inset-0 bg-black/55 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-2xs z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
-            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-bold text-base text-gray-900">{detailTerm.title}</h3>
+            <div className="px-6 py-5 border-b border-gray-150 flex items-center justify-between">
+              <h3 className="font-extrabold text-base text-gray-900">{detailTerm.title}</h3>
               <button 
                 onClick={() => setDetailTerm(null)}
                 className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full transition-colors"
@@ -653,41 +584,41 @@ export default function Home() {
               </button>
             </div>
             
-            <div className="p-6 space-y-4 max-h-[300px] overflow-y-auto no-scrollbar">
+            <div className="p-6 space-y-4 max-h-[350px] overflow-y-auto no-scrollbar">
               <div className="space-y-1.5">
                 <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${
                   detailTerm.required ? "bg-red-danger-light text-red-danger" : "bg-blue-toss-light text-blue-toss"
                 }`}>
-                  {detailTerm.required ? "필수 약관" : "선택 약관"}
+                  {detailTerm.required ? "필수 동의 조항" : "선택 동의 조항"}
                 </span>
                 {!detailTerm.required && (
                   <span className="inline-block text-[10px] font-bold px-2 py-0.5 bg-yellow-warn-light text-yellow-warn ml-2 rounded-md">
-                    동의 해제 시 위험 점수 {detailTerm.impactScore}점 감소
+                    동의 안 할 시 보안 위협도 {detailTerm.impactScore}점 차감
                   </span>
                 )}
               </div>
               
-              <div className="space-y-2 bg-gray-100 p-4 rounded-2xl">
-                <p className="text-xs font-bold text-gray-900">핵심 내용 설명</p>
+              <div className="space-y-2 bg-gray-50 border border-gray-150 p-4 rounded-2xl">
+                <p className="text-xs font-bold text-gray-900">독소 요약 정보</p>
                 <p className="text-xs text-gray-700 leading-relaxed">
                   {detailTerm.description}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-xs font-bold text-gray-900">전체 약관 조항 원문 요약</p>
-                <p className="text-[11px] text-gray-700 leading-relaxed bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                <p className="text-xs font-bold text-gray-900">실제 약관 법적 원문 상세</p>
+                <p className="text-[11px] text-gray-700 leading-relaxed bg-gray-50/30 p-4 rounded-xl border border-gray-100 font-medium">
                   {detailTerm.detailInfo}
                 </p>
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-100">
+            <div className="px-6 py-4 border-t border-gray-150">
               <button
                 onClick={() => setDetailTerm(null)}
-                className="w-full bg-blue-toss text-white font-bold py-3.5 rounded-2xl text-sm transition-colors hover:bg-blue-toss-dark"
+                className="w-full bg-blue-toss text-white font-bold py-3.5 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark"
               >
-                닫기
+                확인 완료
               </button>
             </div>
           </div>
