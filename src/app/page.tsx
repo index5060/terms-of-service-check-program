@@ -503,6 +503,9 @@ export default function Home() {
                 
                 // 실시간 차단 상태에 따른 3줄 요약 텍스트 오버라이드
                 if (currentScenario.id === "okcashbag") {
+                  if (index === 0 && (!agreedTermIds["ok-req-use"] || !agreedTermIds["ok-req-privacy"])) {
+                    displaySum = "🛡️ [차단됨] 필수 약관 및 정보 동의를 거부하여 기본 서비스 가입 및 적립 기능이 차단되었습니다.";
+                  }
                   if (index === 1 && !agreedTermIds["ok-opt-thirdparty-ins"]) {
                     displaySum = "🛡️ [차단됨] 보험 제휴 제공을 해제하여 아웃바운드 TM 전화 영업을 차단했습니다.";
                   }
@@ -511,13 +514,24 @@ export default function Home() {
                   }
                 }
                 if (currentScenario.id === "pass") {
+                  if (index === 0 && (!agreedTermIds["pass-req-use"] || !agreedTermIds["pass-req-privacy"] || !agreedTermIds["pass-req-trust"])) {
+                    displaySum = "🛡️ [차단됨] 필수 본인확인 및 신용 위탁 거부로 인하여 간편인증 및 서명 발급이 정지되었습니다.";
+                  }
                   if (index === 1 && !agreedTermIds["pass-opt-event-trust"]) {
                     displaySum = "🛡️ [차단됨] 외부 프로모션 젤리블루 위탁을 해제하여 우회적 노출 위험을 예방했습니다.";
                   }
                 }
                 if (currentScenario.id === "daiso") {
+                  if (index === 0 && (!agreedTermIds["daiso-req-use"] || !agreedTermIds["daiso-req-privacy"])) {
+                    displaySum = "🛡️ [차단됨] 필수 이용약관 및 정보 수집 거부로 다이소 포인트 적립 및 사용이 차단되었습니다.";
+                  }
                   if (index === 1 && !agreedTermIds["daiso-opt-solpay"]) {
                     displaySum = "🛡️ [차단됨] SOL페이 연계 가입을 해제하여 타사 신용정보 통합 누적 위험을 방지했습니다.";
+                  }
+                }
+                if (currentScenario.id === "starbucks") {
+                  if (index === 0 && (!agreedTermIds["star-req-use"] || !agreedTermIds["star-req-privacy"])) {
+                    displaySum = "🛡️ [차단됨] 필수 이용약관 거부로 인하여 모바일 사이렌 오더 및 선불 충전 이용이 정지되었습니다.";
                   }
                 }
 

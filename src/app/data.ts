@@ -154,8 +154,8 @@ export const SCENARIOS: Scenario[] = [
       "선택 항목을 3개 이상 해제할 시 위협도가 50점 이하의 '주의' 수준으로 낮아져 마일리지 적립 본연의 기능만 안전하게 쓸 수 있습니다."
     ],
     collectionItems: [
-      { name: "이름, 생년월일, 성별, 휴대폰 번호", required: true, type: "본인인증 필수" },
-      { name: "CI/DI 암호화 고유 식별 값", required: true, type: "본인인증 필수" },
+      { name: "이름, 생년월일, 성별, 휴대폰 번호", required: true, type: "본인인증 필수", relatedTermId: "ok-req-privacy" },
+      { name: "CI/DI 암호화 고유 식별 값", required: true, type: "본인인증 필수", relatedTermId: "ok-req-privacy" },
       { name: "OK캐쉬백 적립처 및 사용 포인트 내역", required: false, type: "행동분석 선택", relatedTermId: "ok-opt-reprovide" },
       { name: "보험 가입 추천용 전화번호 및 주소", required: false, type: "금융 제휴 선택", relatedTermId: "ok-opt-thirdparty-ins" },
       { name: "맞춤 타겟용 ADID (광고 기기 식별 값)", required: false, type: "마케팅 선택", relatedTermId: "ok-opt-thirdparty-comm" }
@@ -251,8 +251,8 @@ export const SCENARIOS: Scenario[] = [
       "선택 약관을 해제하면 안전 등급(34점)으로 크게 떨어져 순수 인증용 메커니즘으로만 격리 작동시킬 수 있습니다."
     ],
     collectionItems: [
-      { name: "성명, 생년월일, 성별, 통신사 및 휴대폰 번호", required: true, type: "본인인증 필수" },
-      { name: "NICE/KCB 통신 신용정보 조회 로그", required: true, type: "인증대조 필수" },
+      { name: "성명, 생년월일, 성별, 통신사 및 휴대폰 번호", required: true, type: "본인인증 필수", relatedTermId: "pass-req-privacy" },
+      { name: "NICE/KCB 통신 신용정보 조회 로그", required: true, type: "인증대조 필수", relatedTermId: "pass-req-trust" },
       { name: "경품 지급용 휴대폰 연락처 정보", required: false, type: "이벤트 선택", relatedTermId: "pass-opt-event-privacy" },
       { name: "대행사 모바일 광고 트래킹 식별자", required: false, type: "마케팅 위탁 선택", relatedTermId: "pass-opt-event-trust" }
     ]
@@ -331,8 +331,8 @@ export const SCENARIOS: Scenario[] = [
       "체크를 해제하면 20점의 완벽한 '안전 등급' 마일리지 계정으로 운용할 수 있습니다."
     ],
     collectionItems: [
-      { name: "성명, 휴대전화번호, 성별", required: true, type: "식별정보 필수" },
-      { name: "구매 금액 및 포인트 적립 포인트 이력", required: true, type: "마일리지 필수" },
+      { name: "성명, 휴대전화번호, 성별", required: true, type: "식별정보 필수", relatedTermId: "daiso-req-privacy" },
+      { name: "구매 금액 및 포인트 적립 포인트 이력", required: true, type: "마일리지 필수", relatedTermId: "daiso-req-use" },
       { name: "다이소 매장 방문 위치 및 구매 품목", required: false, type: "성향분석 선택", relatedTermId: "daiso-opt-thirdparty" },
       { name: "주민등록번호 기반 신용 연동 값", required: false, type: "금융 연동 선택", relatedTermId: "daiso-opt-solpay" }
     ]
@@ -391,8 +391,8 @@ export const SCENARIOS: Scenario[] = [
       "금융사 연동 등의 외부 유출 우려가 없어 사이렌오더와 선불 충전 카드를 안전하게 사용하셔도 무방합니다."
     ],
     collectionItems: [
-      { name: "이메일 주소, 닉네임, 생년월일, 휴대전화번호", required: true, type: "사이렌오더 필수" },
-      { name: "스타벅스 충전 금액 및 결제 수단 승인값", required: true, type: "결제처리 필수" },
+      { name: "이메일 주소, 닉네임, 생년월일, 휴대전화번호", required: true, type: "사이렌오더 필수", relatedTermId: "star-req-privacy" },
+      { name: "스타벅스 충전 금액 및 결제 수단 승인값", required: true, type: "결제처리 필수", relatedTermId: "star-req-use" },
       { name: "프로모션 쿠폰 및 혜택 발송 이력", required: false, type: "혜택알림 선택", relatedTermId: "star-opt-marketing" }
     ]
   }
