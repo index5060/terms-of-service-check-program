@@ -58,7 +58,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] OK캐쉬백 회원/카드 서비스 이용약관",
         required: true,
         description: "회원 가입 및 모바일 카드 발급, 마일리지 적립/사용을 위한 필수 이용약관입니다.",
-        impactScore: 0,
+        impactScore: 10,
         detailInfo: "본 약관은 회원이 SK플래닛(주)이 제공하는 OK캐쉬백 서비스를 이용함에 있어 회원과 회사 간의 권리, 의무 및 책임 사항을 규정합니다."
       },
       {
@@ -66,7 +66,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] 개인정보 수집 및 활용 동의",
         required: true,
         description: "이름, 전화번호, 생년월일 등 서비스 본인 확인 및 계정 생성을 위한 수집 동의입니다.",
-        impactScore: 0,
+        impactScore: 15,
         detailInfo: "회사는 서비스 제공을 위해 최소한의 개인식별정보(이름, 휴대폰번호, 생년월일, 성별, CI/DI 고유값)를 필수적으로 수집 및 이용합니다."
       },
       {
@@ -175,7 +175,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] PASS 서비스 이용약관",
         required: true,
         description: "간편인증서 발급 및 본인식별 수단 제공을 위한 기본 약관 동의입니다.",
-        impactScore: 0,
+        impactScore: 10,
         detailInfo: "본 약관은 회원이 통신사가 제공하는 PASS 간편인증 및 전자서명 서비스를 이용함에 있어 권리와 책임 한계를 명시합니다."
       },
       {
@@ -183,7 +183,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] 개인정보 수집 및 이용 동의",
         required: true,
         description: "통신사 본인 명의 개통 여부 대조를 위해 필수 수집되는 항목입니다.",
-        impactScore: 0,
+        impactScore: 15,
         detailInfo: "수집 항목: 성명, 휴대폰번호, 통신사, 생년월일, 성별, 내외국인 정보. 이용 목적: PASS 인증 거래 서명 검증."
       },
       {
@@ -191,7 +191,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] 개인정보의 취급위탁 동의",
         required: true,
         description: "금융결제원 및 외부 신용평가기관과의 정보 중계를 위한 필수 동의입니다.",
-        impactScore: 0,
+        impactScore: 12,
         detailInfo: "회사는 원활한 신원 검증 처리를 위해 NICE평가정보 및 코리아크레딧뷰로(KCB) 등 외부 평가 기관에 통신 신용 확인 위탁 처리를 진행합니다."
       },
       {
@@ -271,7 +271,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] 다이소 멤버십 이용 약관",
         required: true,
         description: "다이소 매장 포인트 적립 및 사용, 멤버십 가입을 위한 기본 권리 의무 사항입니다.",
-        impactScore: 0,
+        impactScore: 10,
         detailInfo: "본 약관은 아성다이소(주)가 운영하는 다이소 멤버십 회원이 오프라인 및 온라인 샵 다이소에서 상품 구매에 따른 마일리지를 환산하는 권리를 명시합니다."
       },
       {
@@ -279,7 +279,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] 필수 개인정보 수집 및 이용 동의서",
         required: true,
         description: "회원 식별 및 포인트 적립 한도 관리를 위한 최소한의 데이터 수집 동의입니다.",
-        impactScore: 0,
+        impactScore: 15,
         detailInfo: "회사는 포인트 적립 처리를 위해 성명, 성별, 연령대, 휴대전화번호를 필수 보유하며, 동의하지 않을 시 멤버십 혜택을 이용할 수 없습니다."
       },
       {
@@ -351,7 +351,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] 스타벅스 회원 이용약관 동의",
         required: true,
         description: "모바일 사이렌오더, 카드 충전 및 전자 영수증 발행을 위한 기본 약관입니다.",
-        impactScore: 0,
+        impactScore: 8,
         detailInfo: "본 약관은 주식회사 에스씨케이컴퍼니가 제공하는 스타벅스 리워드 회원 서비스의 충전, 사이렌 오더 주문 및 리워드 별(Star) 적립 기준을 정의합니다."
       },
       {
@@ -359,7 +359,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] 개인정보 수집 및 이용동의",
         required: true,
         description: "닉네임, 생년월일, 모바일 결제 매칭을 위한 필수 계정 정보 수집 동의입니다.",
-        impactScore: 0,
+        impactScore: 10,
         detailInfo: "수집 항목: 이메일, 닉네임, 휴대폰 번호, 생년월일. 이용 목적: 사이렌오더 호출 닉네임 인식 및 모바일 카드 연동."
       },
       {

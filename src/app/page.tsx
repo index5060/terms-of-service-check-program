@@ -65,11 +65,6 @@ export default function Home() {
   const handleTermToggle = (termId: string) => {
     const term = currentScenario.terms.find(t => t.id === termId);
     if (!term) return;
-    
-    if (term.required && agreedTermIds[termId]) {
-      alert("필수 약관은 가입을 위해 반드시 동의해야 합니다.");
-      return;
-    }
 
     setAgreedTermIds(prev => ({
       ...prev,
@@ -96,7 +91,7 @@ export default function Home() {
   const calculateScore = () => {
     let score = currentScenario.baseScore;
     currentScenario.terms.forEach(term => {
-      if (!term.required && !agreedTermIds[term.id]) {
+      if (!agreedTermIds[term.id]) {
         score -= term.impactScore;
       }
     });
@@ -460,7 +455,7 @@ export default function Home() {
               </div>
               
               {(() => {
-                const inactiveTerms = currentScenario.terms.filter(term => !term.required && !agreedTermIds[term.id]);
+                const inactiveTerms = currentScenario.terms.filter(term => !agreedTermIds[term.id]);
                 if (inactiveTerms.length === 0) {
                   return (
                     <div className="bg-blue-toss-light/50 border border-blue-toss/10 p-3 rounded-xl text-[10px] text-blue-toss font-semibold text-center leading-relaxed">
