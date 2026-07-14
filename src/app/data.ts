@@ -3,7 +3,7 @@ export interface Term {
   title: string;
   required: boolean;
   description: string;
-  impactScore: number; // 동의 해제 시 감점되는 위험 점수
+  impactScore: number; // 동의 해제 시 감점되는 위험 점수 (필수 약관도 감점 적용)
   detailInfo: string;
 }
 
@@ -12,14 +12,14 @@ export interface RiskFactor {
   title: string;
   description: string;
   level: "danger" | "warning" | "safe";
-  relatedTermId: string; // 이 위험이 해결되기 위해 해제해야 하는 선택 약관 ID
+  relatedTermId: string; // 이 위험이 해결되기 위해 해제해야 하는 선택/필수 약관 ID
   resolvedMessage?: string; // 해제되었을 때 보여줄 안전 메시지
   
-  // [상세 분석용 신규 필드]
-  fullClauseText: string;     // 독소 조항이 포함된 실제 약관 법적 원문
-  dangerSegment: string;      // 원문 내에서 형광펜으로 강조할 어구
-  aiAnalysisComment: string;  // 해당 조항이 위험한 상세 보안 설명
-  remedyActionTip: string;    // 사용자 대처 요령 가이드
+  // 상세 분석용 필드
+  fullClauseText: string;     
+  dangerSegment: string;      
+  aiAnalysisComment: string;  
+  remedyActionTip: string;    
 }
 
 export interface CollectionItem {
@@ -54,15 +54,15 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] ConnectX 서비스 이용 약관",
         required: true,
         description: "서비스 기본 기능 이용 및 계정 관리를 위한 필수 동의입니다.",
-        impactScore: 0,
-        detailInfo: "본 약관은 회원이 ConnectX 서비스를 이용함에 있어 필요한 기본적인 사항을 규정합니다. 회원은 가입과 동시에 본 서비스의 약관에 동의한 것으로 간주됩니다."
+        impactScore: 20, // 해제 시 -20점
+        detailInfo: "본 약관은 회원이 ConnectX 서비스를 이용함에 있어 필요한 기본적인 사항을 규정합니다. 회원은 가입과 동시에 본 서비스의 약관에 동의한 것으로 간주되며, 회원의 기본적인 서비스 이용 프로필이 분석 대상에 포함됩니다."
       },
       {
         id: "sns-req-privacy",
         title: "[필수] 개인정보 수집 및 이용 동의",
         required: true,
         description: "이름, 이메일, 생년월일 등 계정 생성을 위한 필수 정보 수집 동의입니다.",
-        impactScore: 0,
+        impactScore: 24, // 해제 시 -24점
         detailInfo: "회사는 서비스 제공을 위해 아래와 같은 개인정보를 필수 수집합니다. 수집 정보: 이메일 주소, 이름, 생년월일, 프로필 이미지. 보관 기간: 회원 탈퇴 시까지."
       },
       {
@@ -70,7 +70,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[선택] 개인정보 국외 이전 및 제3자 제공 동의",
         required: false,
         description: "맞춤형 피드 구성을 위해 전 세계 광고 파트너사에게 개인 데이터를 제공합니다.",
-        impactScore: 24, // 해제 시 -24점
+        impactScore: 20, // 해제 시 -20점
         detailInfo: "수집된 행동 데이터(클릭 로그, 포스팅 내용, 친구 목록 등)는 맞춤형 콘텐츠 및 광고 제공을 목적으로 당사의 해외 계열사 및 제3자 마케팅 대행사에 제공 및 이전됩니다."
       },
       {
@@ -78,7 +78,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[선택] 광고성 정보 수신 및 마케팅 활용 동의",
         required: false,
         description: "신규 기능 소개 및 스폰서 광고 목적의 푸시 알림과 이메일 수신 동의입니다.",
-        impactScore: 11, // 해제 시 -11점
+        impactScore: 15, // 해제 시 -15점
         detailInfo: "회사는 회원이 동의한 마케팅 정보를 바탕으로 이메일, SMS, 앱 푸시 알림 등을 통해 스폰서 광고 및 맞춤 이벤트 홍보 자료를 전송할 수 있습니다."
       },
       {
@@ -134,8 +134,8 @@ export const SCENARIOS: Scenario[] = [
       "위치 기반 동의 시, 실시간 GPS 및 IP 추적을 통해 물리적인 동선이 지속적으로 서버에 누적됩니다."
     ],
     collectionItems: [
-      { name: "이메일 주소 및 계정 정보", required: true, type: "로그인용 필수" },
-      { name: "생년월일 및 성별", required: true, type: "프로필용 필수" },
+      { name: "이메일 주소 및 계정 정보", required: true, type: "로그인용 필수", relatedTermId: "sns-req-privacy" },
+      { name: "생년월일 및 성별", required: true, type: "프로필용 필수", relatedTermId: "sns-req-privacy" },
       { name: "웹 브라우저 쿠키 및 방문 정보", required: false, type: "마케팅용 선택", relatedTermId: "sns-opt-thirdparty" },
       { name: "앱 서비스 내 채팅 및 활동 로그", required: false, type: "빅데이터용 선택", relatedTermId: "sns-opt-thirdparty" },
       { name: "GPS 실시간 위치 좌표", required: false, type: "위치 서비스용 선택", relatedTermId: "sns-opt-location" },
@@ -154,7 +154,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] BuyEasy 회원 약관 동의",
         required: true,
         description: "회원 등급 혜택, 주문 결제 및 배송을 위한 기본 이용 약관입니다.",
-        impactScore: 0,
+        impactScore: 15, // 해제 시 -15점
         detailInfo: "본 약관은 회원이 쇼핑몰에서 상품을 주문하고 결제하며 배송 처리를 받는 과정의 권리와 의무를 규정합니다."
       },
       {
@@ -162,7 +162,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] 필수 개인정보 수집 및 배송 대행 동의",
         required: true,
         description: "결제 완료 후 상품을 배송지 주소로 송부하기 위한 필수 동의입니다.",
-        impactScore: 0,
+        impactScore: 10, // 해제 시 -10점
         detailInfo: "회사는 구매 완료 시 원활한 배송 서비스 제공을 위해 구매자의 성명, 연락처, 주소를 판매자 및 택배업체에 제공합니다."
       },
       {
@@ -214,8 +214,8 @@ export const SCENARIOS: Scenario[] = [
       "선택 약관을 해제할 경우 배송 및 결제 본연의 기능만 안전하게 보장받습니다."
     ],
     collectionItems: [
-      { name: "수령인 성명, 배송 주소, 전화번호", required: true, type: "배송 처리용 필수" },
-      { name: "신용카드번호 및 결제 인증 정보", required: true, type: "결제용 필수" },
+      { name: "수령인 성명, 배송 주소, 전화번호", required: true, type: "배송 처리용 필수", relatedTermId: "shop-req-privacy" },
+      { name: "신용카드번호 및 결제 인증 정보", required: true, type: "결제용 필수", relatedTermId: "shop-req-privacy" },
       { name: "구매 이력 및 자주 본 카테고리 데이터", required: false, type: "맞춤 쇼핑용 선택", relatedTermId: "shop-opt-affiliate" },
       { name: "SMS 및 이메일 수신 여부", required: false, type: "이벤트 광고용 선택", relatedTermId: "shop-opt-marketing" }
     ]
@@ -232,7 +232,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] 전자금융거래 기본 약관 동의",
         required: true,
         description: "안전하고 투명한 금융 거래 체계 이용을 위한 법적 필수 약관입니다.",
-        impactScore: 0,
+        impactScore: 5, // 해제 시 -5점
         detailInfo: "본 약관은 여신금융협회 및 금융위원회 규정에 따라 전자금융거래의 안정성과 신뢰성을 확보하는 데 목적이 있습니다."
       },
       {
@@ -240,7 +240,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[필수] 본인 확인 및 신용 정보 조회 동의",
         required: true,
         description: "본인 거래 보장 및 비대면 계좌 연동을 위한 필수 본인 인증 동의입니다.",
-        impactScore: 0,
+        impactScore: 5, // 해제 시 -5점
         detailInfo: "주민등록번호 및 휴대폰 본인 인증 등을 통해 타인의 도용을 방지하고 본인 명의 계좌 연동만을 허용하기 위한 개인식별정보 조회 프로세스입니다."
       },
       {
@@ -272,8 +272,8 @@ export const SCENARIOS: Scenario[] = [
       "1차 MVP 시나리오 중 가장 이상적이고 안전한 정보 보호 정책 모델을 갖고 있습니다."
     ],
     collectionItems: [
-      { name: "CI/DI 본인 인증 고유식별 값", required: true, type: "본인 인증용 필수" },
-      { name: "연동 계좌번호 및 은행 식별 정보", required: true, type: "송금/결제용 필수" },
+      { name: "CI/DI 본인 인증 고유식별 값", required: true, type: "본인 인증용 필수", relatedTermId: "fin-req-identity" },
+      { name: "연동 계좌번호 및 은행 식별 정보", required: true, type: "송금/결제용 필수", relatedTermId: "fin-req-identity" },
       { name: "통합 계좌 잔액 및 자산 변동 정보", required: false, type: "자산 관리 추천용 선택", relatedTermId: "fin-opt-benefit" }
     ]
   }

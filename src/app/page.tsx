@@ -49,6 +49,9 @@ export default function Home() {
   // 7. 확장 프로그램 설치 안내 모달 상태
   const [showWelcomeMsg, setShowWelcomeMsg] = useState(true);
 
+  // 8. 위험도 점수 산정 기준 모달 상태
+  const [showCriteriaModal, setShowCriteriaModal] = useState(false);
+
   // 시나리오 변경 시 초기 세팅
   useEffect(() => {
     const initialAgreed: Record<string, boolean> = {};
@@ -66,11 +69,6 @@ export default function Home() {
   const handleTermToggle = (termId: string) => {
     const term = currentScenario.terms.find(t => t.id === termId);
     if (!term) return;
-    
-    if (term.required && agreedTermIds[termId]) {
-      alert("필수 약관은 가입을 위해 반드시 동의해야 합니다.");
-      return;
-    }
 
     setAgreedTermIds(prev => ({
       ...prev,
@@ -332,11 +330,6 @@ export default function Home() {
                 {/* 가입 버튼 */}
                 <button
                   onClick={() => {
-                    const hasRequired = currentScenario.terms.filter(t => t.required).every(t => agreedTermIds[t.id]);
-                    if (!hasRequired) {
-                      alert("가입하려면 모든 필수 약관에 동의하셔야 합니다.");
-                      return;
-                    }
                     setIsSignupComplete(true);
                   }}
                   className="w-full bg-blue-toss hover:bg-blue-toss-dark text-white font-extrabold py-4 rounded-xl text-sm transition-all shadow-xs active:scale-[0.99] select-none"
