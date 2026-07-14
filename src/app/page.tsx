@@ -445,9 +445,18 @@ export default function Home() {
 
           {/* 실시간 취약도 차감 내역 */}
           <div className="space-y-2">
-            <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
-              <Shield size={12} className="text-blue-toss" /> 실시간 점수 차감 내역
-            </h4>
+            <div className="flex items-center justify-between w-full">
+              <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
+                <Shield size={12} className="text-blue-toss" /> 실시간 점수 차감 내역
+              </h4>
+              <button 
+                onClick={() => setShowCriteriaModal(true)}
+                className="text-[10px] font-bold text-blue-toss hover:text-blue-toss-dark transition-colors cursor-pointer border-none bg-transparent p-0 flex items-center gap-0.5"
+              >
+                <span>자세히 보기</span>
+                <ChevronRight size={10} />
+              </button>
+            </div>
             <div className="bg-white border border-gray-150 rounded-2xl p-4 space-y-3 shadow-3xs text-[11px]">
               <div className="flex justify-between items-center text-gray-700 font-medium">
                 <span>기본 위험도 ({currentScenario.title} 전체 동의)</span>
@@ -766,13 +775,25 @@ export default function Home() {
 
             </div>
 
-            {/* 하단 닫기 단추 */}
-            <div className="px-6 py-4 border-t border-gray-150">
+            {/* 하단 단추 영역 */}
+            <div className="px-6 py-4 border-t border-gray-150 flex gap-3">
               <button
                 onClick={() => setDetailRisk(null)}
-                className="w-full bg-blue-toss text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark select-none cursor-pointer border-none"
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 rounded-xl text-sm transition-colors cursor-pointer border-none"
               >
-                진단 결과 확인 완료
+                닫기
+              </button>
+              <button
+                onClick={() => {
+                  setAgreedTermIds(prev => ({
+                    ...prev,
+                    [detailRisk.relatedTermId]: false
+                  }));
+                  setDetailRisk(null);
+                }}
+                className="flex-[2] bg-red-danger text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-red-danger/90 cursor-pointer border-none"
+              >
+                해당 약관 선택 해제하기
               </button>
             </div>
           </div>
