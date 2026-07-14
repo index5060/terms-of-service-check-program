@@ -21,7 +21,10 @@ import {
   Lock,
   ArrowLeft,
   Globe,
-  Sparkles
+  Sparkles,
+  Search,
+  CheckCircle,
+  HelpCircle
 } from "lucide-react";
 
 export default function Home() {
@@ -40,7 +43,10 @@ export default function Home() {
   // 5. 약관 세부정보 모달에 노출할 약관 객체
   const [detailTerm, setDetailTerm] = useState<Term | null>(null);
 
-  // 6. 확장 프로그램 설치 안내 모달 상태
+  // 6. 위험 조항 상세 현미경 분석 모달에 노출할 위험 객체
+  const [detailRisk, setDetailRisk] = useState<RiskFactor | null>(null);
+
+  // 7. 확장 프로그램 설치 안내 모달 상태
   const [showWelcomeMsg, setShowWelcomeMsg] = useState(true);
 
   // 시나리오 변경 시 초기 세팅
@@ -53,6 +59,7 @@ export default function Home() {
     setIsSidebarOpen(true);
     setIsSignupComplete(false);
     setDetailTerm(null);
+    setDetailRisk(null);
   }, [currentScenario]);
 
   // 체크박스 클릭 핸들러
@@ -107,6 +114,23 @@ export default function Home() {
   };
 
   const riskInfo = getRiskLevel(currentScore);
+
+  // 독소 조항 형광펜 하이라이팅 렌더러
+  const renderHighlightedText = (fullText: string, highlightText: string) => {
+    if (!highlightText) return <span>{fullText}</span>;
+    const parts = fullText.split(highlightText);
+    if (parts.length === 1) return <span>{fullText}</span>;
+
+    return (
+      <span className="leading-relaxed">
+        {parts[0]}
+        <span className="bg-red-danger/15 text-red-danger font-extrabold px-1 py-0.5 rounded-md border-b-2 border-red-danger border-dashed select-text">
+          {highlightText}
+        </span>
+        {parts[1]}
+      </span>
+    );
+  };
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[#F2F4F6] relative overflow-x-hidden">
@@ -176,7 +200,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Sparkles size={14} className="animate-spin" />
-              <span>확장 프로그램 데모: 왼쪽 웹사이트에서 동의 체크를 해제하면, 우측 GuardTerms 확장 프로그램 패널이 실시간 분석합니다.</span>
+              <span>확장 프로그램 데모: 우측의 위험 감지 조항 카드 옆에 추가된 [돋보기/자세히 보기] 버튼을 클릭해 실제 위협 조항의 형광펜 분석을 확인해보세요.</span>
             </span>
             <button onClick={() => setShowWelcomeMsg(false)} className="hover:opacity-75 pl-4">
               <X size={14} />
@@ -294,7 +318,7 @@ export default function Home() {
 
                           <button 
                             onClick={() => setDetailTerm(term)}
-                            className="text-gray-700 hover:bg-gray-100 p-2 rounded-lg transition-colors flex items-center gap-1 text-[10px] font-bold"
+                            className="text-gray-700 hover:bg-gray-100 p-2 rounded-lg transition-colors flex items-center gap-1 text-[10px] font-bold shrink-0"
                           >
                             <span>약관 보기</span>
                             <ChevronRight size={14} />
@@ -478,35 +502,48 @@ export default function Home() {
                 }건)
               </h4>
               
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {currentScenario.riskFactors.map((rf) => {
                   const isActive = agreedTermIds[rf.relatedTermId];
                   return (
                     <div 
                       key={rf.id}
-                      className={`p-3 rounded-xl border text-[11px] transition-all duration-200 ${
+                      className={`p-3.5 rounded-xl border text-[11px] transition-all duration-200 flex flex-col justify-between gap-2.5 ${
                         isActive 
                           ? "bg-white border-red-danger/15 shadow-2xs" 
                           : "bg-green-safe-light/5 border-green-safe/10 opacity-70"
                       }`}
                     >
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-xs ${
-                          !isActive
-                            ? "bg-green-safe-light text-green-safe"
-                            : rf.level === "danger" 
-                              ? "bg-red-danger-light text-red-danger" 
-                              : "bg-yellow-warn-light text-yellow-warn"
-                        }`}>
-                          {!isActive ? "보호됨" : rf.level === "danger" ? "심각" : "경고"}
-                        </span>
-                        <span className={`font-bold ${!isActive ? "text-gray-500 line-through" : "text-gray-950"}`}>
-                          {rf.title}
-                        </span>
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-xs ${
+                            !isActive
+                              ? "bg-green-safe-light text-green-safe"
+                              : rf.level === "danger" 
+                                ? "bg-red-danger-light text-red-danger" 
+                                : "bg-yellow-warn-light text-yellow-warn"
+                          }`}>
+                            {!isActive ? "보호됨" : rf.level === "danger" ? "심각" : "경고"}
+                          </span>
+                          <span className={`font-bold ${!isActive ? "text-gray-400 line-through" : "text-gray-950"}`}>
+                            {rf.title}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 leading-snug">
+                          {isActive ? rf.description : rf.resolvedMessage}
+                        </p>
                       </div>
-                      <p className="text-gray-700 leading-snug">
-                        {isActive ? rf.description : rf.resolvedMessage}
-                      </p>
+
+                      {/* 위험이 활성화(Active)일 때만 자세히 보기(돋보기 분석 모달) 노출 */}
+                      {isActive && (
+                        <button
+                          onClick={() => setDetailRisk(rf)}
+                          className="self-end text-[10px] font-bold text-red-danger bg-red-danger-light hover:bg-red-danger/15 px-2.5 py-1.5 rounded-lg border border-red-danger/10 flex items-center gap-1 transition-colors select-none"
+                        >
+                          <Search size={12} strokeWidth={2.5} />
+                          <span>독소조항 정밀검사</span>
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -570,7 +607,7 @@ export default function Home() {
         </button>
       )}
 
-      {/* 4. 약관 상세보기 팝업 모달 */}
+      {/* 4. [기존] 약관 상세보기 팝업 모달 */}
       {detailTerm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-2xs z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
@@ -619,6 +656,88 @@ export default function Home() {
                 className="w-full bg-blue-toss text-white font-bold py-3.5 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark"
               >
                 확인 완료
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. [신규 추가] 위험 조항 정밀 검사 상세 리포트 모달 (형광펜 하이라이트 분석) */}
+      {detailRisk && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-2xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-xl rounded-3xl overflow-hidden shadow-2xl animate-scale-in">
+            
+            {/* 상단 띠 배너 */}
+            <div className="bg-red-danger/5 px-6 py-5 border-b border-gray-150 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-red-danger">
+                <ShieldAlert size={20} />
+                <h3 className="font-extrabold text-base text-gray-900">GuardTerms 약관 정밀 현미경 검사</h3>
+              </div>
+              <button 
+                onClick={() => setDetailRisk(null)}
+                className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            {/* 바디 영역 */}
+            <div className="p-6 space-y-5 max-h-[460px] overflow-y-auto no-scrollbar">
+              
+              {/* 위협 개요 */}
+              <div className="flex justify-between items-start gap-4">
+                <div className="space-y-1">
+                  <h4 className="font-black text-lg text-gray-950">{detailRisk.title}</h4>
+                  <p className="text-xs text-gray-700 font-medium">실시간 감지된 세부 보안 취약성 리포트</p>
+                </div>
+                <span className="text-[10px] font-bold px-2.5 py-1 bg-red-danger-light text-red-danger rounded-full flex items-center gap-1 shrink-0">
+                  <AlertTriangle size={10} />
+                  <span>{detailRisk.level === "danger" ? "심각 등급" : "경고 등급"}</span>
+                </span>
+              </div>
+
+              {/* 형광펜 약관 원문 강조 영역 */}
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-gray-900 flex items-center gap-1">
+                  📄 약관 조항 원문 및 유해 어구 (Highlight)
+                </p>
+                <div className="bg-gray-50 border border-gray-150 p-4.5 rounded-2xl text-xs text-gray-700 font-medium leading-relaxed">
+                  {renderHighlightedText(detailRisk.fullClauseText, detailRisk.dangerSegment)}
+                </div>
+              </div>
+
+              {/* AI 정밀 진단 해설 */}
+              <div className="space-y-2 bg-yellow-warn-light/30 border border-yellow-warn/15 p-4.5 rounded-2xl">
+                <p className="text-xs font-bold text-yellow-warn flex items-center gap-1">
+                  <Sparkles size={14} className="animate-pulse" /> AI 정밀 분석 진단 코멘트
+                </p>
+                <p className="text-xs text-gray-950 leading-relaxed font-semibold">
+                  {detailRisk.aiAnalysisComment}
+                </p>
+              </div>
+
+              {/* 대처 방안 제안 */}
+              <div className="bg-blue-toss-light border border-blue-toss/15 p-4.5 rounded-2xl flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-toss text-white flex items-center justify-center flex-shrink-0 font-extrabold text-sm">
+                  💡
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-blue-toss">피해 예방 솔루션 (Action)</p>
+                  <p className="text-xs text-gray-900 font-medium leading-relaxed">
+                    {detailRisk.remedyActionTip}
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* 하단 닫기 단추 */}
+            <div className="px-6 py-4 border-t border-gray-150">
+              <button
+                onClick={() => setDetailRisk(null)}
+                className="w-full bg-blue-toss text-white font-bold py-4 rounded-xl text-sm transition-colors hover:bg-blue-toss-dark select-none"
+              >
+                진단 결과 확인 완료
               </button>
             </div>
           </div>

@@ -12,8 +12,14 @@ export interface RiskFactor {
   title: string;
   description: string;
   level: "danger" | "warning" | "safe";
-  relatedTermId: string; // 이 위험이 해결되기 위해 해제해야 하는 선택 약관 ID (필수인 경우 해제 불가)
+  relatedTermId: string; // 이 위험이 해결되기 위해 해제해야 하는 선택 약관 ID
   resolvedMessage?: string; // 해제되었을 때 보여줄 안전 메시지
+  
+  // [상세 분석용 신규 필드]
+  fullClauseText: string;     // 독소 조항이 포함된 실제 약관 법적 원문
+  dangerSegment: string;      // 원문 내에서 형광펜으로 강조할 어구
+  aiAnalysisComment: string;  // 해당 조항이 위험한 상세 보안 설명
+  remedyActionTip: string;    // 사용자 대처 요령 가이드
 }
 
 export interface CollectionItem {
@@ -91,7 +97,11 @@ export const SCENARIOS: Scenario[] = [
         description: "사용자가 클릭한 포스트, 좋아요 흔적, 채팅 검색어 등이 국외 마케팅 에이전시로 암호화 없이 이전될 위험이 있습니다.",
         level: "danger",
         relatedTermId: "sns-opt-thirdparty",
-        resolvedMessage: "제3자 제공 거부로 사용자의 행동 데이터 국외 이전 위험이 원천 차단되었습니다."
+        resolvedMessage: "제3자 제공 거부로 사용자의 행동 데이터 국외 이전 위험이 원천 차단되었습니다.",
+        fullClauseText: "제7조 (개인정보의 이전 및 위탁) 회사는 서비스 안정성 및 맞춤형 피드 최적화 광고 알고리즘 분석을 위해 사용자의 모든 서비스 활동 로그(좋아요 흔적, 메신저 키워드, 페이지 체류 시간 등)를 전 세계 다국적 광고 제휴 에이전시 및 국외 마케팅 대행 파트너 사에게 무단 및 암호화 없이 이전 및 제공할 수 있으며, 회원은 본 약관 동의로써 이에 동의합니다.",
+        dangerSegment: "사용자의 모든 서비스 활동 로그(좋아요 흔적, 메신저 키워드, 페이지 체류 시간 등)를 전 세계 다국적 광고 제휴 에이전시 및 국외 마케팅 대행 파트너 사에게 무단 및 암호화 없이 이전 및 제공할 수 있으며",
+        aiAnalysisComment: "사용자가 남기는 모든 민감한 활동 기록(클릭 경로, 채팅 키워드 등)이 국외 광고 연합체에게 무제한 전송된다는 무서운 조항입니다. 정보 주체의 관심사나 사생활이 데이터 분석용으로 도용 및 영구 프로파일링 될 우려가 큽니다.",
+        remedyActionTip: "회원 가입 폼에서 '[선택] 개인정보 국외 이전 및 제3자 제공 동의' 체크박스를 즉시 해제하시면 행동 데이터의 상업 목적 유출을 법적으로 원천 차단합니다."
       },
       {
         id: "sns-risk-2",
@@ -99,7 +109,11 @@ export const SCENARIOS: Scenario[] = [
         description: "앱이 백그라운드에 있을 때도 GPS 좌표를 수집하여 방문하는 장소에 따른 표적 광고에 활용할 위험이 있습니다.",
         level: "warning",
         relatedTermId: "sns-opt-location",
-        resolvedMessage: "위치 수집 거부로 사용자의 이동 동선 노출 및 실시간 추적 우려가 해소되었습니다."
+        resolvedMessage: "위치 수집 거부로 사용자의 이동 동선 노출 및 실시간 추적 우려가 해소되었습니다.",
+        fullClauseText: "제12조 (위치정보의 수집) 당사는 실시간 인근 네트워크 친구 매칭 및 위치 특화 제휴 할인 광고 서비스의 제공을 위하여 사용자의 GPS 모듈 신호 및 기지국 IP 주소를 주기적으로 백서버로 수집합니다. 특히 앱이 활성화되어 있지 않은 백그라운드 상태나 기기가 꺼지지 않은 모든 작동 상태에서도 위치 정보 조회가 무작동으로 상시 백그라운드 구동될 수 있습니다.",
+        dangerSegment: "앱이 활성화되어 있지 않은 백그라운드 상태나 기기가 꺼지지 않은 모든 작동 상태에서도 위치 정보 조회가 무작동으로 상시 백그라운드 구동될 수 있습니다",
+        aiAnalysisComment: "어플리케이션을 적극적으로 사용하지 않는 오프라인 일상 시간에도 GPS 좌표가 상시 수집되어 기록된다는 뜻입니다. 방문지 목록이나 물리적 행동 동선 정보가 고스란히 유출될 수 있습니다.",
+        remedyActionTip: "가입 폼에서 '[선택] 위치 기반 정보 수집 및 이용 동의' 체크를 해제하시면 상시 위치 트래킹 엔진을 격리시킬 수 있습니다."
       },
       {
         id: "sns-risk-3",
@@ -107,7 +121,11 @@ export const SCENARIOS: Scenario[] = [
         description: "개인 프로필 분석을 기반으로 하루 10회 이상의 맞춤 타겟 이메일과 푸시 알림이 발송될 수 있습니다.",
         level: "warning",
         relatedTermId: "sns-opt-marketing",
-        resolvedMessage: "마케팅 활용 동의를 해제하여 불필요한 스팸 및 타겟 마케팅 알림이 차단되었습니다."
+        resolvedMessage: "마케팅 활용 동의를 해제하여 불필요한 스팸 및 타겟 마케팅 알림이 차단되었습니다.",
+        fullClauseText: "제9조 (광고 전송) 회사는 마케팅 및 광고 수집 정보에 동의한 회원에 대하여 서비스 이용에 부합하는 타겟 메일링, 문자 스팸, 일일 10회 이상의 푸시 마케팅 알림 등 다채로운 스폰서 광고 매체를 무제한 발송할 수 있으며, 이로 인해 통신 요금이 청구될 수 있습니다.",
+        dangerSegment: "일일 10회 이상의 푸시 마케팅 알림 등 다채로운 스폰서 광고 매체를 무제한 발송할 수 있으며",
+        aiAnalysisComment: "서버가 사용자의 행동 성향을 판독하여 하루에도 몇 번씩 원하지 않는 스폰서 알림이나 이메일 광고 폭탄을 유발할 수 있습니다. 쾌적한 모바일 사용 환경을 심각하게 훼손할 수 있는 양식입니다.",
+        remedyActionTip: "가입 폼에서 '[선택] 광고성 정보 수신 및 마케팅 활용 동의'의 동의 체크를 꺼두시면 광고 스팸이 오지 않습니다."
       }
     ],
     baseSummary: [
@@ -171,7 +189,11 @@ export const SCENARIOS: Scenario[] = [
         description: "선호 구매 정보가 제휴 카드사로 넘어가, 연동 할인 카드 발급 광고 및 상담 전화를 받게 될 우려가 있습니다.",
         level: "warning",
         relatedTermId: "shop-opt-affiliate",
-        resolvedMessage: "제휴사 동의를 차단하여 금융 제휴 카드의 표적 아웃바운드 텔레마케팅 가능성을 방지했습니다."
+        resolvedMessage: "제휴사 동의를 차단하여 금융 제휴 카드의 표적 아웃바운드 텔레마케팅 가능성을 방지했습니다.",
+        fullClauseText: "제14조 (제휴 서비스 활성화) 회사는 회원 맞춤형 혜택 정보 매칭을 위하여 BuyEasy 회원 중 제휴 제3자 동의를 마친 회원의 구매 빈도, 주소지 연령대, 선호 상품 카테고리를 당사 제휴 카드사에 전송합니다. 카드사는 이를 신용카드 발급 권유, 통합 보험 가입 텔레마케팅 아웃바운드 영업 목적으로 활용할 수 있습니다.",
+        dangerSegment: "카드사는 이를 신용카드 발급 권유, 통합 보험 가입 텔레마케팅 아웃바운드 영업 목적으로 활용할 수 있습니다",
+        aiAnalysisComment: "사용자의 동의 하에 금융 제휴사(카드, 보험)에 정보가 이전되어 대출이나 카드 가입 관련 원치 않는 홍보 전화(아웃바운드 TM) 폭탄을 받을 수 있게 됩니다.",
+        remedyActionTip: "가입 폼에서 '[선택] 제휴 제3자 제휴 카드사 정보 제공 동의' 체크박스를 해제하시면 금융사로의 정보 전달이 거절되어 안심하실 수 있습니다."
       },
       {
         id: "shop-risk-2",
@@ -179,7 +201,11 @@ export const SCENARIOS: Scenario[] = [
         description: "특가 상품 판매 유도를 위한 장바구니 리마인드 알림 및 일일 쿠폰 SMS 스팸이 잦아질 수 있습니다.",
         level: "warning",
         relatedTermId: "shop-opt-marketing",
-        resolvedMessage: "광고 마케팅 수신 거부로 일일 쇼핑 알림 및 문자 스팸 유입 경로를 차단했습니다."
+        resolvedMessage: "광고 마케팅 수신 거부로 일일 쇼핑 알림 및 문자 스팸 유입 경로를 차단했습니다.",
+        fullClauseText: "제18조 (이벤트 정보 수신) BuyEasy는 회원의 마케팅 광고 동의를 활용하여 장바구니에 담아둔 상품의 할인 기한 리마인드, 관심 브랜드의 일일 타임세일 관련 광고 메일 및 타겟 단문 메시지(SMS)를 24시간 동안 수시로 발송할 수 있습니다.",
+        dangerSegment: "타겟 단문 메시지(SMS)를 24시간 동안 수시로 발송할 수 있습니다",
+        aiAnalysisComment: "할인 기한 알림이나 장바구니 리마인드라는 핑계로, 사실상 24시간 내내 실시간 문자나 광고 메세지를 사용자 핸드폰에 누적 전송하게 유도하는 악용 여지가 있습니다.",
+        remedyActionTip: "가입 폼에서 '[선택] 마케팅 광고 및 이벤트 수신 동의'를 끄고 가입하시면 필수 영수증 안내 문자 외의 일체 광고 문자가 오지 않습니다."
       }
     ],
     baseSummary: [
@@ -233,7 +259,11 @@ export const SCENARIOS: Scenario[] = [
         description: "자산 관리 리포트 제공을 위해 계좌 잔액 변동 추이가 안전하게 분석되지만, 민감한 개인 금융 현황이 서비스 데이터베이스에 일시적으로 축적됩니다.",
         level: "safe",
         relatedTermId: "fin-opt-benefit",
-        resolvedMessage: "자산 관리 알림 해제로 계좌 모니터링 분석 및 관련 DB 누적 가능성을 원천 차단했습니다."
+        resolvedMessage: "자산 관리 알림 해제로 계좌 모니터링 분석 및 관련 DB 누적 가능성을 원천 차단했습니다.",
+        fullClauseText: "제5조 (자산 현황 정보 활용) SecurePay는 자산 관리 혜택 및 소비 가이드 기능을 연동한 사용자에 한하여 연동된 전 은행 잔고 추이, 실시간 소비 대행 내역, 변동 금리 상환 상태를 지속적으로 모니터링하고 분석용 데이터베이스에 저장합니다.",
+        dangerSegment: "은행 잔고 추이, 실시간 소비 대행 내역, 변동 금리 상환 상태를 지속적으로 모니터링하고 분석용 데이터베이스에 저장",
+        aiAnalysisComment: "금융 자산 관리 추천을 제공하기 위한 목적으로, 모든 수입/지출 내역과 실시간 계좌 잔고 데이터를 주기적으로 감시하고 DB에 로깅하는 개인 자산 모니터링 현상이 유발됩니다.",
+        remedyActionTip: "가입 폼에서 '[선택] 자산 관리 및 자산 추천 혜택 알림 동의' 체크박스를 끄고 가입하시면 모니터링 수집이 정지되어 안전합니다."
       }
     ],
     baseSummary: [
