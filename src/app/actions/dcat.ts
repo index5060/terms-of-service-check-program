@@ -50,7 +50,10 @@ export async function syncDcatAndDetectNewUrl() {
     }
 
     // 1. 공공데이터포털 DCAT API 호출
-    const url = `http://apis.data.go.kr/1130000/FtcDecsnInfoService/getFtcDecsnInfoList?serviceKey=${encodeURIComponent(apiKey)}&resultType=json&numOfRows=10&pageNo=1`;
+    // 이미 인코딩된 서비스 키인 경우(% 문자 포함) 추가 인코딩을 하지 않고, 디코딩된 키일 때만 encodeURIComponent 처리
+    const isAlreadyEncoded = apiKey.includes('%');
+    const serviceKeyParam = isAlreadyEncoded ? apiKey : encodeURIComponent(apiKey);
+    const url = `http://apis.data.go.kr/1130000/FtcDecsnInfoService/getFtcDecsnInfoList?serviceKey=${serviceKeyParam}&resultType=json&numOfRows=10&pageNo=1`;
 
     const res = await fetch(url, {
       next: { revalidate: 1800 } // 30분 캐싱
