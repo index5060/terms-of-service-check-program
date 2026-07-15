@@ -620,9 +620,9 @@ export default function Home() {
                                     {term.title}
                                   </span>
                                   {term.required ? (
-                                    <span className="text-[8px] font-bold bg-red-danger-light text-red-danger px-1 rounded-sm">필수</span>
+                                    <span className="text-[8px] font-bold bg-red-danger-light text-red-danger px-1 rounded-sm shrink-0 whitespace-nowrap">필수</span>
                                   ) : (
-                                    <span className="text-[8px] font-bold bg-gray-200 text-gray-700 px-1 rounded-sm">선택</span>
+                                    <span className="text-[8px] font-bold bg-gray-200 text-gray-700 px-1 rounded-sm shrink-0 whitespace-nowrap">선택</span>
                                   )}
                                 </div>
                                 <span className="text-[9px] text-gray-400 mt-0.5 line-clamp-1 leading-snug">
