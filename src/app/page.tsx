@@ -653,9 +653,15 @@ export default function Home() {
                     displaySum = "🛡️ [차단됨] SOL페이 연계 가입을 해제하여 타사 신용정보 통합 누적 위험을 방지했습니다.";
                   }
                 }
-                if (currentScenario.id === "starbucks") {
-                  if (index === 0 && (!agreedTermIds["star-req-use"] || !agreedTermIds["star-req-privacy"])) {
-                    displaySum = "🛡️ [차단됨] 필수 이용약관 거부로 인하여 모바일 사이렌 오더 및 선불 충전 이용이 정지되었습니다.";
+                if (currentScenario.id === "kkuldeal") {
+                  if (index === 0 && (!agreedTermIds["kkul-req-use"] || !agreedTermIds["kkul-req-privacy"])) {
+                    displaySum = "🛡️ [차단됨] 필수 이용약관 및 결제 정보 수집을 거절하여 서비스 가입 및 초특가 상품 결제 기능이 정지되었습니다.";
+                  }
+                  if (index === 1 && !agreedTermIds["kkul-opt-abroad"]) {
+                    displaySum = "🛡️ [차단됨] 국외 제3자 이전 동의를 거부하여 결제 카드 정보의 해외 서버 무단 이전을 차단했습니다.";
+                  }
+                  if (index === 2 && !agreedTermIds["kkul-opt-device"]) {
+                    displaySum = "🛡️ [차단됨] 기기 접근 권한을 거부하여 실시간 위치/사진 갤러리 미디어 외부 전송 해킹을 예방했습니다.";
                   }
                 }
 

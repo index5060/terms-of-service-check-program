@@ -367,7 +367,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[선택] 초특가 혜택 분석 목적 국외 제3자 이전 동의",
         required: false,
         description: "해외 마케팅 분석 및 표적 프로모션 광고 전송 대행을 위해 국외 파트너사에 개인정보를 공유합니다.",
-        impactScore: 35,
+        impactScore: 15,
         detailInfo: "개인정보를 제공받는 자: 중국 선전 소재 마케팅 대행 파트너사. 제공 목적: 맞춤 타겟 이벤트 및 아웃바운드 푸시 전송. 제공 항목: 이름, 전화번호, 쇼핑 구매 이력, 카드 번호 일부."
       },
       {
@@ -375,7 +375,7 @@ export const SCENARIOS: Scenario[] = [
         title: "[선택] 기기 제어 권한 일괄 획득 동의 (백그라운드)",
         required: false,
         description: "사이즈 추천 및 모바일 최적화 목적의 백그라운드 GPS, 주소록, 사진첩 일괄 접근 권한을 획득합니다.",
-        impactScore: 35,
+        impactScore: 15,
         detailInfo: "사용자는 모바일 최적화 편의기능 사용을 위해 스마트폰 백그라운드 구동 중에도 GPS 실시간 동선, 연락처 목록, 갤러리 미디어 사진 정보 일체에 앱이 접근하여 조회 및 외부 전송하는 것을 동의합니다."
       }
     ],
@@ -408,7 +408,7 @@ export const SCENARIOS: Scenario[] = [
     baseSummary: [
       "KISA 도메인 추적 API 분석 결과, 개설 10일 미만의 위험도가 극도로 높은 해외 신생 피싱 도메인 의심 사이트입니다.",
       "구매자의 신용카드 결제 번호 및 비밀 고유 CVC 값을 국외로 이전하여 카드 부정 복제 위험을 초래합니다.",
-      "선택 약관을 전체 해제할 시 위협 점수가 25점 안전 등급 수준으로 낮아져 카드/기기 해킹 위험을 차단하고 격리시킬 수 있습니다."
+      "선택 약관을 전체 해제하더라도 필수 조항 내 유출 위험으로 인해 주의 등급(65점) 수준의 취약도가 상시 유지됩니다."
     ],
     collectionItems: [
       { name: "성명, 생년월일, 휴대전화 연락처", required: true, type: "본인인증 필수", relatedTermId: "kkul-req-privacy" },
