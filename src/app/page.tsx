@@ -5,9 +5,9 @@ import {
   SCENARIOS, 
   Scenario, 
   Term, 
-  RiskFactor, 
-  CollectionItem 
+  RiskFactor
 } from "./data";
+import { syncDcatAndDetectNewUrl } from "./actions/dcat";
 import { 
   Shield, 
   ShieldCheck, 
@@ -16,25 +16,34 @@ import {
   ChevronRight, 
   X, 
   RefreshCw, 
-  Info, 
   AlertTriangle,
   Lock,
-  Globe,
   Sparkles,
   Search,
-  CheckCircle,
   HelpCircle,
   Smartphone,
   Wifi,
   Battery
 } from "lucide-react";
 
+interface DcatWarning {
+  title: string;
+  url: string;
+  reason: string;
+}
+
 export default function Home() {
   // 1. 현재 활성화된 시나리오 관리
   const [currentScenario, setCurrentScenario] = useState<Scenario>(SCENARIOS[0]);
   
-  // 2. 동의한 약관 ID 목록 관리
-  const [agreedTermIds, setAgreedTermIds] = useState<Record<string, boolean>>({});
+  // 2. 동의한 약관 ID 목록 관리 (지연 초기화 함수를 제공하여 useEffect의 동기 setState 방지)
+  const [agreedTermIds, setAgreedTermIds] = useState<Record<string, boolean>>(() => {
+    const initialAgreed: Record<string, boolean> = {};
+    SCENARIOS[0].terms.forEach(term => {
+      initialAgreed[term.id] = true;
+    });
+    return initialAgreed;
+  });
   
   // 3. 가입 완료 상태
   const [isSignupComplete, setIsSignupComplete] = useState(false);
@@ -48,18 +57,38 @@ export default function Home() {
   // 6. 위험도 점수 산정 기준 모달
   const [showCriteriaModal, setShowCriteriaModal] = useState(false);
 
-  // 시나리오 변경 시 초기 세팅
+  // 7. DCAT 동기화 및 신규 URL 경고 목록 관리
+  const [dcatWarnings, setDcatWarnings] = useState<DcatWarning[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // 페이지 진입 시 DCAT API 호출 및 신규 URL 감시
   useEffect(() => {
+    async function fetchDcatStatus() {
+      setIsSyncing(true);
+      const result = await syncDcatAndDetectNewUrl();
+      if (result.success && result.warnings && result.warnings.length > 0) {
+        setDcatWarnings(result.warnings as DcatWarning[]);
+      }
+      setIsSyncing(false);
+    }
+    fetchDcatStatus();
+  }, []);
+
+  // 시나리오 클릭 스위칭 시 모든 상태를 한 트랜잭션에서 일괄 초기화하여 useEffect 린트 에러 해소
+  const handleScenarioChange = (sc: Scenario) => {
+    setCurrentScenario(sc);
     const initialAgreed: Record<string, boolean> = {};
-    currentScenario.terms.forEach(term => {
-      initialAgreed[term.id] = true; // 기본적으로 모든 약관 동의로 시작하여 위험 감지를 체감하게 유도
+    sc.terms.forEach(term => {
+      initialAgreed[term.id] = true;
     });
     setAgreedTermIds(initialAgreed);
     setIsSignupComplete(false);
     setDetailTerm(null);
     setDetailRisk(null);
     setShowCriteriaModal(false);
-  }, [currentScenario]);
+  };
+
+
 
   // 체크박스 클릭 핸들러 (모바일 약관 동의 토글)
   const handleTermToggle = (termId: string) => {
@@ -155,7 +184,7 @@ export default function Home() {
               return (
                 <button
                   key={sc.id}
-                  onClick={() => setCurrentScenario(sc)}
+                  onClick={() => handleScenarioChange(sc)}
                   className={`flex-1 sm:flex-none py-1.5 px-3 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                     isActive 
                       ? "bg-white text-blue-toss shadow-xs" 
@@ -194,8 +223,62 @@ export default function Home() {
             <Sparkles size={14} className="animate-pulse" />
             <span>모바일 디바이스 내부의 체크박스를 해제하면 우측 SDK 분석판에서 실시간으로 감점 및 등급이 갱신됩니다.</span>
           </span>
+          <button 
+            onClick={async () => {
+              setIsSyncing(true);
+              const result = await syncDcatAndDetectNewUrl();
+              if (result.success && result.warnings) {
+                setDcatWarnings(result.warnings as DcatWarning[]);
+              }
+              setIsSyncing(false);
+            }}
+            disabled={isSyncing}
+            className="bg-white/20 hover:bg-white/30 text-white border border-white/20 text-[10px] px-2.5 py-1 rounded-md font-bold transition-all disabled:opacity-50 cursor-pointer"
+          >
+            {isSyncing ? "동기화 중..." : "DCAT 수집 갱신"}
+          </button>
         </div>
       </div>
+
+      {/* 신규 감지된 OpenAPI URL 경고창 (DCAT 연계) */}
+      {dcatWarnings.length > 0 && (
+        <div className="bg-red-50/90 border-b border-red-100 py-3 px-6 relative z-25 shadow-3xs animate-fade-in">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5 text-red-700">
+              <AlertTriangle size={18} className="shrink-0 mt-0.5 text-red-600" />
+              <div>
+                <span className="font-extrabold text-xs tracking-tight">🚨 위험 감지: 데이터베이스에 등록되지 않은 신규 API URL이 감지되었습니다.</span>
+                <p className="text-[10px] text-red-600/80 font-medium mt-0.5">
+                  해당 URL을 통한 비인가 동의 수집 위험이 있으므로 정밀 보안 검토가 완료될 때까지 주의바랍니다.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {dcatWarnings.map((w, idx) => (
+                <div key={idx} className="flex items-center gap-1.5 bg-white border border-red-200/50 px-2.5 py-1 rounded-lg shadow-4xs text-[9px] font-semibold text-gray-700">
+                  <span className="text-[8px] bg-red-100 text-red-700 px-1.5 py-0.2 rounded-md font-bold">UNVERIFIED</span>
+                  <span className="truncate max-w-[180px]">{w.title}</span>
+                  <a 
+                    href={w.url} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="text-blue-toss hover:underline ml-1 font-bold"
+                  >
+                    보기
+                  </a>
+                </div>
+              ))}
+              <button 
+                onClick={() => setDcatWarnings([])}
+                className="text-red-700 hover:bg-red-100/50 p-1 rounded-lg transition-colors cursor-pointer"
+                title="경고 닫기"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. 메인 화면 구성 (중앙: 가상 스마트폰 디바이스 목업, 우측: 분석기 SDK 대시보드) */}
       <div className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row justify-center items-stretch gap-8">
