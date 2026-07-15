@@ -1204,7 +1204,7 @@ export default function Home() {
                 <div className="text-xs text-gray-900 font-semibold leading-relaxed space-y-1.5">
                   <div className="flex justify-between border-b border-blue-toss/10 pb-1.5">
                     <span>기본 위험도 점수 (전체 동의 시)</span>
-                    <span>서비스별 상이 (25 ~ 98점)</span>
+                    <span>서비스별 상이</span>
                   </div>
                   <div className="flex justify-between text-green-safe">
                     <span>선택/필수 약관 해제에 따른 차감 점수</span>
