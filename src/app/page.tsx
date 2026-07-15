@@ -424,10 +424,10 @@ export default function Home() {
       )}
 
       {/* 2. 메인 화면 구성 (중앙: 가상 스마트폰 디바이스 목업, 우측: 분석기 SDK 대시보드) */}
-      <div className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row justify-center items-stretch gap-8">
+      <div className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row justify-center items-start gap-8">
         
         {/* [좌/중앙] 가상 스마트폰 디바이스 목업 (iPhone 스타일) */}
-        <div className="flex-1 flex justify-center items-center py-4">
+        <div className="w-full lg:w-[380px] shrink-0 flex justify-center py-4">
           <div className="relative w-[360px] h-[720px] bg-white border-[10px] border-gray-900 rounded-[50px] shadow-2xl overflow-hidden flex flex-col shrink-0 select-none">
             
             {/* 폰 상단 데코레이션 (다이내믹 아일랜드 / 수화기) */}
