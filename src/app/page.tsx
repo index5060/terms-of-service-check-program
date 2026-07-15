@@ -291,6 +291,10 @@ export default function Home() {
                 </button>
               );
             })}
+            
+            {/* 꿀딜아울렛과 실시간 약관 심사 사이의 시각적 구분선 및 간격 추가 */}
+            <div className="w-[1.5px] h-4 bg-gray-250 mx-2.5 self-center hidden sm:block shrink-0"></div>
+
             {/* 🔍 실시간 약관 심사 탭 */}
             <button
               onClick={() => {
