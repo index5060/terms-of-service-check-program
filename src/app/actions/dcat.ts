@@ -32,6 +32,7 @@ export async function syncDcatAndDetectNewUrl() {
       console.warn("PUBLIC_DATA_API_KEY가 비어있거나 플레이스홀더 상태입니다. 모의(Mock) 경고 데이터를 반환합니다.");
       return {
         success: true,
+        mode: 'MOCK' as const,
         newUrlsCount: 2,
         warnings: [
           {
@@ -48,8 +49,7 @@ export async function syncDcatAndDetectNewUrl() {
       };
     }
 
-    // 1. 공공데이터포털 DCAT API 호출 (JSON 포맷 요구)
-    // 공정거래위원회 심결서 목록 조회 Open API를 기본 타겟으로 설정합니다.
+    // 1. 공공데이터포털 DCAT API 호출
     const url = `http://apis.data.go.kr/1130000/FtcDecsnInfoService/getFtcDecsnInfoList?serviceKey=${encodeURIComponent(apiKey)}&resultType=json&numOfRows=10&pageNo=1`;
 
     const res = await fetch(url, {
@@ -60,13 +60,22 @@ export async function syncDcatAndDetectNewUrl() {
       throw new Error(`공공데이터 API 서버 응답 오류: 상태 코드 ${res.status}`);
     }
 
-    const data = await res.json();
+    // 공공데이터포털은 API 인증 오류 시 XML 형식으로 에러를 뱉는 특성이 있음
+    const responseText = await res.text();
+    if (responseText.includes('<OpenAPI_ServiceResponse>') || responseText.includes('<errMsg>')) {
+      // 에러 메시지 내용 파싱 시도
+      const errCodeMatch = responseText.match(/<returnReasonCode>(.*?)<\/returnReasonCode>/);
+      const errMsgMatch = responseText.match(/<returnAuthMsg>(.*?)<\/returnAuthMsg>/);
+      const code = errCodeMatch ? errCodeMatch[1] : '인증 실패';
+      const msg = errMsgMatch ? errMsgMatch[1] : '승인되지 않은 인증키이거나 호출 권한이 없습니다.';
+      throw new Error(`공공 API 인증 에러 (${code}): ${msg}`);
+    }
+
+    const data = JSON.parse(responseText);
     const rawItems = (data.response?.body?.items?.item || []) as DcatRawItem[];
 
     // 2. 응답 데이터에서 API URL 정보(accessURL)와 메타데이터 추출
     const detectedDistributions: DcatDistribution[] = rawItems.map((item: DcatRawItem, idx: number) => {
-      // 심결 내용 조회가 가능한 공문서 다운로드 URL 혹은 상세 URL을 accessURL로 매핑합니다.
-      // (각 사건별 심결 정보 조회용 고유 엔드포인트 생성)
       const mockAccessUrl = `https://apis.data.go.kr/1130000/FtcDecsnInfoService/getFtcDecsnInfoDetail?serviceKey=API_KEY&caseNo=${item.caseNo || ''}`;
       return {
         identifier: item.caseNo || `ftc-case-${idx}`,
@@ -82,7 +91,6 @@ export async function syncDcatAndDetectNewUrl() {
     for (const dist of detectedDistributions) {
       if (!dist.accessURL) continue;
 
-      // DB에 이미 존재하는 source_url인지 확인 (API Key 노출되지 않은 base 형태로 체크)
       const cleanUrl = dist.accessURL.replace(/serviceKey=[^&]*/, 'serviceKey=KEY');
       
       const { data: existingGuideline, error } = await supabase
@@ -96,7 +104,6 @@ export async function syncDcatAndDetectNewUrl() {
         continue;
       }
 
-      // 존재하지 않는 새로운 URL이라면 경고 목록에 추가하고 DB에 자동 적재
       if (!existingGuideline) {
         newUrlWarnings.push({
           title: dist.title,
@@ -104,7 +111,6 @@ export async function syncDcatAndDetectNewUrl() {
           reason: "데이터베이스 검증에 등록되지 않은 공정위 심결례 신규 API Endpoint가 DCAT 동기화 중 감지되었습니다."
         });
 
-        // PGVector 임베딩을 제외한 기본 데이터 적재 (추후 백그라운드 스케줄러로 벡터 적재 유도)
         await supabase
           .from('government_guidelines')
           .insert([
@@ -127,6 +133,7 @@ export async function syncDcatAndDetectNewUrl() {
 
     return {
       success: true,
+      mode: 'REAL' as const,
       newUrlsCount: newUrlWarnings.length,
       warnings: newUrlWarnings
     };
@@ -136,13 +143,13 @@ export async function syncDcatAndDetectNewUrl() {
     console.error("DCAT 동기화 에러:", errorMsg);
     return { 
       success: false, 
+      mode: 'ERROR' as const,
       error: errorMsg,
-      // 오류 상황 시에도 테스트용 목업 경고 데이터를 반환하여 동작 여부를 브라우저 상에서 시뮬레이션할 수 있게 보완
       warnings: [
         {
-          title: "[임시 경고] 2026년 개인정보 유출 방지 및 위반 심결 처리 지침 v3.1 (로컬 테스트)",
+          title: "[임시 가상 데이터] 2026년 개인정보 유출 방지 및 위반 심결 처리 지침 v3.1",
           url: "https://apis.data.go.kr/1130000/FtcDecsnInfoService/getFtcDecsnInfoList-v3.1",
-          reason: "Supabase DB 연결이 구성되지 않았거나 API Key 오류로 로컬 가상 검증 데이터를 노출합니다."
+          reason: `API 연동 중 오류 발생: ${errorMsg}`
         }
       ]
     };

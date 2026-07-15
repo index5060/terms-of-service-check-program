@@ -60,14 +60,21 @@ export default function Home() {
   // 7. DCAT 동기화 및 신규 URL 경고 목록 관리
   const [dcatWarnings, setDcatWarnings] = useState<DcatWarning[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMode, setSyncMode] = useState<'REAL' | 'MOCK' | 'ERROR'>('MOCK');
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // 페이지 진입 시 DCAT API 호출 및 신규 URL 감시
   useEffect(() => {
     async function fetchDcatStatus() {
       setIsSyncing(true);
       const result = await syncDcatAndDetectNewUrl();
+      if (result.mode) setSyncMode(result.mode);
       if (result.success && result.warnings && result.warnings.length > 0) {
         setDcatWarnings(result.warnings as DcatWarning[]);
+        setApiError(null);
+      } else if (!result.success) {
+        setApiError(result.error || "알 수 없는 API 에러");
+        setDcatWarnings(result.warnings as DcatWarning[]); // 에러 발생 시에도 fallback warnings 노출
       }
       setIsSyncing(false);
     }
@@ -227,7 +234,12 @@ export default function Home() {
             onClick={async () => {
               setIsSyncing(true);
               const result = await syncDcatAndDetectNewUrl();
+              if (result.mode) setSyncMode(result.mode);
               if (result.success && result.warnings) {
+                setDcatWarnings(result.warnings as DcatWarning[]);
+                setApiError(null);
+              } else if (!result.success) {
+                setApiError(result.error || "알 수 없는 API 에러");
                 setDcatWarnings(result.warnings as DcatWarning[]);
               }
               setIsSyncing(false);
@@ -247,9 +259,29 @@ export default function Home() {
             <div className="flex items-start gap-2.5 text-red-700">
               <AlertTriangle size={18} className="shrink-0 mt-0.5 text-red-600" />
               <div>
-                <span className="font-extrabold text-xs tracking-tight">🚨 위험 감지: 데이터베이스에 등록되지 않은 신규 API URL이 감지되었습니다.</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-extrabold text-xs tracking-tight">🚨 위험 감지: 등록되지 않은 신규 API URL이 감지되었습니다.</span>
+                  {syncMode === 'REAL' && (
+                    <span className="text-[9px] bg-green-safe-light text-green-safe border border-green-safe/25 font-black px-2 py-0.5 rounded-full">
+                      ✓ 실시간 공공 API 연동 모드
+                    </span>
+                  )}
+                  {syncMode === 'MOCK' && (
+                    <span className="text-[9px] bg-yellow-warn-light text-yellow-warn border border-yellow-warn/25 font-black px-2 py-0.5 rounded-full">
+                      ⚠ API 키 미입력 (가상 시뮬레이션)
+                    </span>
+                  )}
+                  {syncMode === 'ERROR' && (
+                    <span className="text-[9px] bg-red-danger-light text-red-danger border border-red-danger/25 font-black px-2 py-0.5 rounded-full" title={apiError || ''}>
+                      ✗ API 연동 에러 (호출 오류)
+                    </span>
+                  )}
+                </div>
                 <p className="text-[10px] text-red-600/80 font-medium mt-0.5">
-                  해당 URL을 통한 비인가 동의 수집 위험이 있으므로 정밀 보안 검토가 완료될 때까지 주의바랍니다.
+                  {syncMode === 'ERROR' 
+                    ? `[API 오류 발생] ${apiError || '공공 API 호출 권한 또는 인증키 오류가 감지되었습니다. .env.local을 재확인하세요.'}` 
+                    : '해당 URL을 통한 비인가 동의 수집 위험이 있으므로 정밀 보안 검토가 완료될 때까지 주의바랍니다.'
+                  }
                 </p>
               </div>
             </div>
