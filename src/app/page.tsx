@@ -19,7 +19,6 @@ import {
   RefreshCw, 
   AlertTriangle,
   Lock,
-  Sparkles,
   Search,
   HelpCircle,
   Smartphone,
@@ -33,21 +32,21 @@ interface DcatWarning {
   reason: string;
 }
 
-// 0. AI 약관 직접 검사용 가상 시나리오 정의
+// 0. 실시간 약관 심사 가상 시나리오 정의
 const CUSTOM_SCENARIO: Scenario = {
   id: "custom",
-  title: "AI 실시간 분석기",
+  title: "실시간 약관 심사기",
   category: "임의의 모든 모바일 약관 심사",
-  emoji: "✨",
-  brandColor: "#6366F1", // 인디고 블루
+  emoji: "🔍",
+  brandColor: "#1E293B", // 다크 네이비 테마로 시각적 통일
   textColor: "text-white",
   baseScore: 15,
   terms: [],
   riskFactors: [],
   baseSummary: [
     "왼쪽 입력 폼에 분석하고자 하는 기업의 약관 본문을 복사해서 입력해 주세요.",
-    "Gemini AI가 PIPC/KFTC/KISA 규제 데이터베이스와 비교 분석하여 위험 조항을 정밀 스캔합니다.",
-    "가입 전 치명적인 결제 정보 해외 유출이나 과도한 기기 해킹 위험을 미연에 방지하세요."
+    "공공데이터 지침 DB 및 판례를 바탕으로 독소 조항 위협 수준을 정밀 스캔합니다.",
+    "가입 전 치명적인 결제 정보 해외 유출이나 과도한 기기 권한 위험을 예방하세요."
   ],
   collectionItems: []
 };
@@ -102,10 +101,10 @@ export default function Home() {
       // 동적 시나리오 생성 및 적용 (임의 약관 심사는 점수 고정식 보고서 형태로 terms를 빈 배열 지정)
       const updatedCustomScenario: Scenario = {
         id: "custom",
-        title: "AI 실시간 분석기",
+        title: "실시간 약관 심사기",
         category: "임의의 모든 모바일 약관 심사",
-        emoji: "✨",
-        brandColor: "#6366F1",
+        emoji: "🔍",
+        brandColor: "#1E293B",
         textColor: "text-white",
         baseScore: analysis.level === 'danger' ? 95 : analysis.level === 'warning' ? 60 : 15,
         terms: [],
@@ -116,7 +115,7 @@ export default function Home() {
             description: analysis.description,
             level: analysis.level,
             relatedTermId: "custom-opt-term",
-            resolvedMessage: "동의 해제하여 AI 감지 위험 조항을 안전하게 차단하였습니다.",
+            resolvedMessage: "동의 해제하여 감지된 위험 조항을 안전하게 차단하였습니다.",
             fullClauseText: analysis.fullClauseText,
             dangerSegment: analysis.dangerSegment,
             aiAnalysisComment: analysis.aiAnalysisComment,
@@ -124,12 +123,12 @@ export default function Home() {
           }
         ],
         baseSummary: [
-          `💡 AI 분석 요약: ${analysis.description}`,
+          `💡 분석 요약: ${analysis.description}`,
           `🎓 근거 분석: ${analysis.aiAnalysisComment}`,
           `📌 대처 팁: ${analysis.remedyActionTip}`
         ],
         collectionItems: [
-          { name: analysis.dangerSegment || "결제 수단 및 기기 권한 정보", required: false, type: "AI 분석 수집", relatedTermId: "custom-opt-term" }
+          { name: analysis.dangerSegment || "결제 수단 및 기기 권한 정보", required: false, type: "분석 수집", relatedTermId: "custom-opt-term" }
         ]
       };
 
@@ -292,7 +291,7 @@ export default function Home() {
                 </button>
               );
             })}
-            {/* ✨ AI 약관 분석 탭 */}
+            {/* 🔍 실시간 약관 심사 탭 */}
             <button
               onClick={() => {
                 setCustomAnalysisResult(null);
@@ -301,12 +300,12 @@ export default function Home() {
               }}
               className={`flex-1 sm:flex-none py-1.5 px-3 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
                 currentScenario.id === "custom"
-                  ? "bg-indigo-600 text-white shadow-xs" 
-                  : "text-indigo-600 hover:bg-indigo-50"
+                  ? "bg-slate-800 text-white shadow-xs" 
+                  : "text-slate-700 hover:bg-slate-100"
               }`}
             >
-              <span>✨</span>
-              <span>AI 약관 분석</span>
+              <span>🔍</span>
+              <span>실시간 약관 심사</span>
             </button>
           </div>
 
@@ -339,7 +338,7 @@ export default function Home() {
       <div className="bg-blue-toss text-white py-2.5 px-6 relative z-30 flex items-center text-xs font-semibold shadow-xs">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <Sparkles size={14} className="animate-pulse" />
+            <Shield size={14} />
             <span>모바일 디바이스 내부의 체크박스를 해제하면 우측 SDK 분석판에서 실시간으로 감점 및 등급이 갱신됩니다.</span>
           </span>
           <button 
@@ -486,19 +485,19 @@ export default function Home() {
                 {currentScenario.id === "custom" && !customAnalysisResult ? (
                   <div className="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar bg-gray-50/50">
                     <div className="space-y-1.5">
-                      <h4 className="text-sm font-extrabold text-gray-900 flex items-center gap-1">
-                        <Sparkles size={14} className="text-indigo-600" /> 임의 약관 AI 심사
+                      <h4 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
+                        <Search size={14} className="text-slate-700" /> 약관 정밀 심사 (지침 대조)
                       </h4>
                       <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
-                        검사하고 싶은 서비스의 약관 텍스트(동의서 조항)를 아래에 입력하시면 Gemini AI가 실시간으로 분석합니다.
+                        검사하고 싶은 서비스의 약관 텍스트(동의서 조항)를 아래에 입력하시면 실시간으로 규제 지침과 대조 분석합니다.
                       </p>
                     </div>
 
                     {isAnalyzing ? (
                       <div className="flex flex-col items-center justify-center py-16 space-y-3.5 text-center h-[320px]">
-                        <RefreshCw size={32} className="text-indigo-600 animate-spin" />
+                        <RefreshCw size={32} className="text-slate-800 animate-spin" />
                         <div>
-                          <p className="text-xs font-black text-gray-800">AI 정밀 심사 중...</p>
+                          <p className="text-xs font-black text-gray-800">지침 대조 정밀 심사 중...</p>
                           <p className="text-[9px] text-gray-400 mt-1 max-w-[220px] leading-normal mx-auto font-medium">
                             정부(PIPC, KISA, KFTC) 규제 지침 문서와 대조하여 악성 약관 및 유출 권한을 스캔하고 있습니다.
                           </p>
@@ -510,7 +509,7 @@ export default function Home() {
                           value={customInputText}
                           onChange={(e) => setCustomInputText(e.target.value)}
                           placeholder="여기에 분석할 약관 문장을 입력 또는 복사-붙여넣기 하세요. (예: 가입을 위해 신용카드 비밀번호와 CVC를 중국 서버로 이전하고, 앱이 꺼진 동안에도 실시간 위치를 무단 수집합니다...)"
-                          className="w-full h-[280px] p-3.5 text-[11px] bg-white border border-gray-250 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-sans leading-relaxed text-gray-800 shadow-inner"
+                          className="w-full h-[280px] p-3.5 text-[11px] bg-white border border-gray-250 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent font-sans leading-relaxed text-gray-800 shadow-inner"
                         />
                         {customAnalysisError && (
                           <div className="bg-red-50 text-red-700 text-[9px] p-3 rounded-xl font-extrabold border border-red-150 leading-normal">
@@ -521,11 +520,11 @@ export default function Home() {
                     )}
                   </div>
                 ) : currentScenario.id === "custom" && customAnalysisResult ? (
-                  // AI 약관 분석 완료 후 보고서 뷰 (체크박스 해제 리스트가 아니며, 순수 결과 리포트 출력)
+                  // 약관 분석 완료 후 보고서 뷰 (체크박스 해제 리스트가 아니며, 순수 결과 리포트 출력)
                   <div className="flex-1 overflow-y-auto p-5 space-y-4.5 no-scrollbar bg-gray-50/50">
                     <div className="space-y-1.5 pb-2 border-b border-gray-200">
-                      <h4 className="text-xs font-black text-indigo-600 flex items-center gap-1">
-                        <Sparkles size={13} /> AI 정밀 심사 결과
+                      <h4 className="text-xs font-black text-slate-800 flex items-center gap-1">
+                        <Shield size={13} className="text-slate-800" /> 정밀 심사 판정 보고서
                       </h4>
                       <p className="text-[9px] text-gray-400 font-bold leading-normal">
                         공공데이터 지침과 연계 대조한 최종 판정 리포트입니다.
@@ -550,8 +549,8 @@ export default function Home() {
 
                     {/* 정밀 해설 카드 */}
                     <div className="bg-white border border-gray-150 rounded-2xl p-4 shadow-3xs space-y-2.5">
-                      <span className="text-[9px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md inline-block">
-                        🤖 AI 권고 및 분석 근거
+                      <span className="text-[9px] text-slate-800 font-bold bg-slate-100 px-2 py-0.5 rounded-md inline-block">
+                        🔍 정밀 분석 및 지침 대조
                       </span>
                       <p className="text-[9.5px] text-gray-700 leading-relaxed font-sans font-medium">
                         {renderHighlightedText(customAnalysisResult.aiAnalysisComment, customAnalysisResult.dangerSegment)}
@@ -561,7 +560,7 @@ export default function Home() {
                     {/* 대처 방안 카드 */}
                     <div className="bg-white border border-gray-150 rounded-2xl p-4 shadow-3xs space-y-2.5">
                       <span className="text-[9px] text-green-safe font-bold bg-green-50 px-2 py-0.5 rounded-md inline-block">
-                        💡 피해 예방 솔루션
+                        📌 피해 예방 대처 수칙
                       </span>
                       <p className="text-[9.5px] text-gray-600 leading-relaxed font-medium">
                         {customAnalysisResult.remedyActionTip}
@@ -853,10 +852,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* AI 실시간 3줄 분석 요약 */}
+          {/* 실시간 핵심 약관 요약 */}
           <div className="space-y-2">
             <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1">
-              <Sparkles size={12} className="text-blue-toss" /> AI 실시간 3줄 요약
+              <Shield size={12} className="text-blue-toss" /> 실시간 핵심 약관 요약
             </h4>
             <ul className="space-y-2.5 bg-gray-50 border border-gray-150 p-3.5 rounded-2xl">
               {currentScenario.baseSummary.map((sum, index) => {
@@ -1113,10 +1112,10 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* AI 정밀 진단 해설 */}
+              {/* 규제 가이드라인 상세 해석 */}
               <div className="space-y-2 bg-yellow-warn-light/30 border border-yellow-warn/15 p-4.5 rounded-2xl">
-                <p className="text-xs font-bold text-yellow-warn flex items-center gap-1">
-                  <Sparkles size={14} className="animate-pulse" /> AI 정밀 분석 진단 코멘트
+                <p className="text-xs font-bold text-yellow-warn flex items-center gap-1.5">
+                  <Search size={14} /> 규제 가이드라인 상세 해석
                 </p>
                 <p className="text-xs text-gray-950 leading-relaxed font-semibold">
                   {detailRisk.aiAnalysisComment}
@@ -1126,10 +1125,10 @@ export default function Home() {
               {/* 대처 방안 제안 */}
               <div className="bg-blue-toss-light border border-blue-toss/15 p-4.5 rounded-2xl flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-blue-toss text-white flex items-center justify-center flex-shrink-0 font-extrabold text-sm">
-                  💡
+                  📌
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-blue-toss">피해 예방 솔루션 (Action)</p>
+                  <p className="text-xs font-bold text-blue-toss">권장 대처 행동 지침 (Action)</p>
                   <p className="text-xs text-gray-900 font-medium leading-relaxed">
                     {detailRisk.remedyActionTip}
                   </p>
