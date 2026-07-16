@@ -375,7 +375,7 @@ export default function Home() {
       </div>
 
       {/* 신규 감지된 OpenAPI URL 경고창 (DCAT 연계) */}
-      {dcatWarnings.length > 0 && (
+      {dcatWarnings.length > 0 && currentScenario.id === 'kkuldeal' ? (
         <div className="bg-red-50/90 border-b border-red-100 py-3 px-6 relative z-25 shadow-3xs animate-fade-in">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex items-start gap-2.5 text-red-700">
@@ -432,6 +432,23 @@ export default function Home() {
             </div>
           </div>
         </div>
+      ) : (
+        /* 안전한 실서비스 시나리오들을 보고 있을 때 노출할 공공 안전망 검증 배너 */
+        (syncMode === 'REAL' || syncMode === 'MOCK') && currentScenario.id !== 'custom' && (
+          <div className="bg-green-50/90 border-b border-green-100 py-2.5 px-6 relative z-25 shadow-3xs animate-fade-in">
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-green-800">
+                <ShieldCheck size={16} className="text-green-600 shrink-0" />
+                <span className="font-extrabold text-xs tracking-tight">
+                  ✓ 공공 안전망 검증 완료: 해당 서비스의 도메인(WHOIS) 정보와 통신 규격이 안전하게 등록 승인된 상태입니다.
+                </span>
+              </div>
+              <span className="text-[9px] bg-green-safe-light text-green-safe border border-green-safe/25 font-black px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                SECURE
+              </span>
+            </div>
+          </div>
+        )
       )}
 
       {/* 2. 메인 화면 구성 (중앙: 가상 스마트폰 디바이스 목업, 우측: 분석기 SDK 대시보드) */}
