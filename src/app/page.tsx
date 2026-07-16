@@ -33,7 +33,6 @@ interface DcatWarning {
   reason: string;
 }
 
-// 0. 실시간 약관 심사 가상 시나리오 정의
 const CUSTOM_SCENARIO: Scenario = {
   id: "custom",
   title: "실시간 약관 심사기",
@@ -41,7 +40,7 @@ const CUSTOM_SCENARIO: Scenario = {
   emoji: "🔍",
   brandColor: "#1E293B", // 다크 네이비 테마로 시각적 통일
   textColor: "text-white",
-  baseScore: 15,
+  baseScore: 0,
   terms: [],
   riskFactors: [],
   baseSummary: [
@@ -110,7 +109,7 @@ export default function Home() {
         emoji: "🔍",
         brandColor: "#1E293B",
         textColor: "text-white",
-        baseScore: analysis.level === 'danger' ? 95 : analysis.level === 'warning' ? 60 : 15,
+        baseScore: analysis.level === 'danger' ? 95 : analysis.level === 'warning' ? 60 : 0,
         terms: [],
         riskFactors: [
           {
