@@ -10,15 +10,6 @@ interface DcatDistribution {
   issued: string;
 }
 
-interface DcatRawItem {
-  caseNo?: string;
-  caseNm?: string;
-  decisionDe?: string;
-  url?: string;
-  decisionContsUrl?: string;
-  id?: string;
-  title?: string;
-}
 
 /**
  * 공공데이터포털 DCAT API와 연동하여 신규 지침 및 심결례 API URL을 감지하고 DB에 등록하는 함수
@@ -36,65 +27,77 @@ export async function syncDcatAndDetectNewUrl() {
         newUrlsCount: 2,
         warnings: [
           {
-            title: "[모의 테스트] 2026년 개인정보 유출 방지 및 위반 심결 처리 지침 v3.1",
-            url: "https://apis.data.go.kr/1130000/FtcDecsnInfoService/getFtcDecsnInfoList-v3.1",
-            reason: "데이터베이스에 등록되지 않은 신규 API 엔드포인트 URL이 DCAT 카탈로그 수집 중에 발견되었습니다."
+            title: "[모의 테스트] KISA 인터넷진흥원 도메인 검증 정보",
+            url: "https://apis.data.go.kr/B551505/whois/domain_name?serviceKey=KEY&query=kisa.or.kr",
+            reason: "데이터베이스에 등록되지 않은 KISA 공식 도메인 WHOIS 정보가 수집 과정에서 감지되었습니다."
           },
           {
-            title: "[모의 테스트] 공정위 불공정 가맹거래 계약 시정 가이드 API v1.2",
-            url: "https://apis.data.go.kr/1130000/FtcDecsnInfoService/getFtcDecsnInfoList-v1.2",
-            reason: "검증되지 않은 신규 가맹계약 독소조항 탐지 표준약관 API URL이 수집되었습니다."
+            title: "[모의 테스트] 공정거래위원회 도메인 검증 정보",
+            url: "https://apis.data.go.kr/B551505/whois/domain_name?serviceKey=KEY&query=ftc.go.kr",
+            reason: "검증되지 않은 KFTC 공식 도메인 WHOIS 정보가 수집되었습니다."
           }
         ]
       };
     }
 
-    // 1. 공공데이터포털 DCAT API 호출
+    // 1. 공공데이터포털 WHOIS API 호출
     // 이미 인코딩된 서비스 키인 경우(% 문자 포함) 추가 인코딩을 하지 않고, 디코딩된 키일 때만 encodeURIComponent 처리
     const isAlreadyEncoded = apiKey.includes('%');
     const serviceKeyParam = isAlreadyEncoded ? apiKey : encodeURIComponent(apiKey);
-    const url = `http://apis.data.go.kr/1130000/FtcDecsnInfoService/getFtcDecsnInfoList?serviceKey=${serviceKeyParam}&resultType=json&numOfRows=10&pageNo=1`;
+    
+    const targetDomains = [
+      { domain: 'kisa.or.kr', agency: 'KISA', name: '한국인터넷진흥원' },
+      { domain: 'ftc.go.kr', agency: 'KFTC', name: '공정거래위원회' },
+      { domain: 'pipc.go.kr', agency: 'PIPC', name: '개인정보보호위원회' }
+    ];
 
-    const res = await fetch(url, {
-      next: { revalidate: 1800 } // 30분 캐싱
-    });
+    const detectedDistributions: DcatDistribution[] = [];
 
-    if (!res.ok) {
-      throw new Error(`공공데이터 API 서버 응답 오류: 상태 코드 ${res.status}`);
+    for (const target of targetDomains) {
+      const url = `https://apis.data.go.kr/B551505/whois/domain_name?serviceKey=${serviceKeyParam}&query=${target.domain}&answer=json`;
+      
+      const res = await fetch(url, {
+        next: { revalidate: 1800 } // 30분 캐싱
+      });
+
+      if (!res.ok) {
+        throw new Error(`공공데이터 API 서버 응답 오류 (도메인: ${target.domain}): 상태 코드 ${res.status}`);
+      }
+
+      // 공공데이터포털은 API 인증 오류 시 XML 형식으로 에러를 뱉는 특성이 있음
+      const responseText = await res.text();
+      if (responseText.includes('<OpenAPI_ServiceResponse>') || responseText.includes('<errMsg>')) {
+        const errCodeMatch = responseText.match(/<returnReasonCode>(.*?)<\/returnReasonCode>/);
+        const errMsgMatch = responseText.match(/<returnAuthMsg>(.*?)<\/returnAuthMsg>/);
+        const code = errCodeMatch ? errCodeMatch[1] : '인증 실패';
+        const msg = errMsgMatch ? errMsgMatch[1] : '승인되지 않은 인증키이거나 호출 권한이 없습니다.';
+        throw new Error(`공공 API 인증 에러 (${code}): ${msg}`);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseErr: unknown) {
+        const parseErrMsg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+        throw new Error(`WHOIS API JSON 파싱 오류: ${parseErrMsg}`);
+      }
+
+      const whoisData = data.response?.whois?.krdomain;
+      if (whoisData) {
+        detectedDistributions.push({
+          identifier: `whois-${target.domain}`,
+          accessURL: `https://apis.data.go.kr/B551505/whois/domain_name?serviceKey=KEY&query=${target.domain}`,
+          title: `[WHOIS] ${whoisData.regName} (${whoisData.name})`,
+          issued: whoisData.regDate || new Date().toISOString()
+        });
+      }
     }
-
-    // 공공데이터포털은 API 인증 오류 시 XML 형식으로 에러를 뱉는 특성이 있음
-    const responseText = await res.text();
-    if (responseText.includes('<OpenAPI_ServiceResponse>') || responseText.includes('<errMsg>')) {
-      // 에러 메시지 내용 파싱 시도
-      const errCodeMatch = responseText.match(/<returnReasonCode>(.*?)<\/returnReasonCode>/);
-      const errMsgMatch = responseText.match(/<returnAuthMsg>(.*?)<\/returnAuthMsg>/);
-      const code = errCodeMatch ? errCodeMatch[1] : '인증 실패';
-      const msg = errMsgMatch ? errMsgMatch[1] : '승인되지 않은 인증키이거나 호출 권한이 없습니다.';
-      throw new Error(`공공 API 인증 에러 (${code}): ${msg}`);
-    }
-
-    const data = JSON.parse(responseText);
-    const rawItems = (data.response?.body?.items?.item || []) as DcatRawItem[];
-
-    // 2. 응답 데이터에서 API URL 정보(accessURL)와 메타데이터 추출
-    const detectedDistributions: DcatDistribution[] = rawItems.map((item: DcatRawItem, idx: number) => {
-      const mockAccessUrl = `https://apis.data.go.kr/1130000/FtcDecsnInfoService/getFtcDecsnInfoDetail?serviceKey=API_KEY&caseNo=${item.caseNo || ''}`;
-      return {
-        identifier: item.caseNo || `ftc-case-${idx}`,
-        accessURL: mockAccessUrl,
-        title: item.caseNm || `공정위 불공정 약관 심결 - ${item.caseNo || idx}`,
-        issued: item.decisionDe || new Date().toISOString()
-      };
-    });
 
     const newUrlWarnings = [];
 
-    // 3. 루프를 돌며 DB에 등록되지 않은 신규 API URL 감시 및 적재
+    // 2. 루프를 돌며 DB에 등록되지 않은 신규 API URL 감시 및 적재
     for (const dist of detectedDistributions) {
-      if (!dist.accessURL) continue;
-
-      const cleanUrl = dist.accessURL.replace(/serviceKey=[^&]*/, 'serviceKey=KEY');
+      const cleanUrl = dist.accessURL;
       
       const { data: existingGuideline, error } = await supabase
         .from('government_guidelines')
@@ -108,20 +111,24 @@ export async function syncDcatAndDetectNewUrl() {
       }
 
       if (!existingGuideline) {
+        const isKisa = dist.title.includes('인터넷진흥원');
+        const isFtc = dist.title.includes('공정거래');
+        const agencyCode = isKisa ? 'KISA' : (isFtc ? 'KFTC' : 'PIPC');
+
         newUrlWarnings.push({
           title: dist.title,
           url: cleanUrl,
-          reason: "데이터베이스 검증에 등록되지 않은 공정위 심결례 신규 API Endpoint가 DCAT 동기화 중 감지되었습니다."
+          reason: `보안 안전망 검증에 등록되지 않은 ${agencyCode} 공식 기관 도메인 주소가 실시간 WHOIS 조회를 통해 새로 감지되었습니다.`
         });
 
         await supabase
           .from('government_guidelines')
           .insert([
             {
-              agency: 'KFTC',
-              category: '심결례',
+              agency: agencyCode,
+              category: '도메인정보',
               title: `[신규 감지] ${dist.title}`,
-              content: `${dist.title} 사건 관련 불공정 약관 심결 정보입니다. 사건번호: ${dist.identifier}`,
+              content: `${dist.title} 도메인의 WHOIS 정보입니다. 등록일: ${dist.issued}`,
               source_url: cleanUrl,
               metadata: {
                 dcat_identifier: dist.identifier,
@@ -143,15 +150,15 @@ export async function syncDcatAndDetectNewUrl() {
 
   } catch (error: unknown) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error("DCAT 동기화 에러:", errorMsg);
+    console.error("WHOIS API 동기화 에러:", errorMsg);
     return { 
       success: false, 
       mode: 'ERROR' as const,
       error: errorMsg,
       warnings: [
         {
-          title: "[임시 가상 데이터] 2026년 개인정보 유출 방지 및 위반 심결 처리 지침 v3.1",
-          url: "https://apis.data.go.kr/1130000/FtcDecsnInfoService/getFtcDecsnInfoList-v3.1",
+          title: "[임시 가상 데이터] KISA 인터넷진흥원 도메인 검증 정보",
+          url: "https://apis.data.go.kr/B551505/whois/domain_name?serviceKey=KEY&query=kisa.or.kr",
           reason: `API 연동 중 오류 발생: ${errorMsg}`
         }
       ]
