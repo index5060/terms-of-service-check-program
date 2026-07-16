@@ -317,34 +317,8 @@ export default function Home() {
             </button>
           </div>
 
-          {/* 우측 도구 영역 (뷰 전환기 및 초기화 버튼) */}
+          {/* 우측 도구 영역 (초기화 버튼) */}
           <div className="flex items-center">
-            {/* 뷰 모드 토글 세그먼트 컨트롤 */}
-            <div className="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200/60 mr-2.5 shrink-0 select-none">
-              <button
-                onClick={() => setViewMode('mobile')}
-                className={`px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                  viewMode === 'mobile'
-                    ? "bg-white text-blue-toss shadow-3xs"
-                    : "text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                <Smartphone size={11} />
-                <span>모바일 앱 뷰</span>
-              </button>
-              <button
-                onClick={() => setViewMode('web')}
-                className={`px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                  viewMode === 'web'
-                    ? "bg-white text-blue-toss shadow-3xs"
-                    : "text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                <Monitor size={11} />
-                <span>웹 브라우저 뷰</span>
-              </button>
-            </div>
-
             {/* 초기화 버튼 */}
             <button 
               onClick={() => {
@@ -464,11 +438,37 @@ export default function Home() {
       <div className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row justify-center items-start gap-8">
         
         {/* [좌/중앙] 가상 디바이스 목업 (모바일 프레임 / 웹 브라우저 프레임 스위칭) */}
-        <div className={`transition-all duration-350 flex justify-center py-4 ${
+        <div className={`transition-all duration-350 flex flex-col items-center py-4 ${
           viewMode === 'mobile' 
             ? "w-full lg:w-[380px] shrink-0" 
             : "flex-1 min-w-[320px] lg:max-w-3xl"
         }`}>
+          {/* 기기 상단 뷰 모드 세그먼트 컨트롤 */}
+          <div className="flex bg-gray-150 p-0.5 rounded-lg border border-gray-200/60 mb-3.5 select-none shrink-0 w-fit">
+            <button
+              onClick={() => setViewMode('mobile')}
+              className={`px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                viewMode === 'mobile'
+                  ? "bg-white text-blue-toss shadow-3xs"
+                  : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              <Smartphone size={11} />
+              <span>모바일 앱 뷰</span>
+            </button>
+            <button
+              onClick={() => setViewMode('web')}
+              className={`px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                viewMode === 'web'
+                  ? "bg-white text-blue-toss shadow-3xs"
+                  : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              <Monitor size={11} />
+              <span>웹 브라우저 뷰</span>
+            </button>
+          </div>
+
           <div className={`transition-all duration-350 overflow-hidden flex flex-col select-none bg-white ${
             viewMode === 'mobile'
               ? "relative w-[360px] h-[720px] border-[10px] border-gray-900 rounded-[50px] shadow-2xl shrink-0"
@@ -505,7 +505,7 @@ export default function Home() {
 
             {/* 디바이스 바디 콘텐츠 */}
             {!isSignupComplete ? (
-              <div className={`flex-1 flex flex-col justify-between bg-white h-full ${
+              <div className={`flex-1 min-h-0 flex flex-col justify-between bg-white ${
                 viewMode === 'mobile' ? 'pt-9' : 'pt-0'
               }`}>
                 
