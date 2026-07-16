@@ -496,8 +496,12 @@ export default function Home() {
                   <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
                   <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
                 </div>
-                <div className="bg-white border border-gray-200 text-gray-400 text-[10px] font-semibold py-0.5 px-4 rounded-md w-[240px] text-center truncate select-none shadow-3xs font-mono">
-                  https://guardterms.co.kr/register
+                <div className="bg-white border border-gray-200 text-gray-500 text-[10px] font-semibold py-0.5 px-4 rounded-md w-[320px] text-center truncate select-none shadow-3xs font-mono">
+                  {currentScenario.id === "okcashbag" && "https://www.okcashbag.com/register"}
+                  {currentScenario.id === "pass" && "https://www.passcert.co.kr/register"}
+                  {currentScenario.id === "daiso" && "https://www.daisomall.co.kr/register"}
+                  {currentScenario.id === "kkuldeal" && "https://www.gguldeal-outlet.co.kr/register"}
+                  {currentScenario.id === "custom" && "https://guardterms.co.kr/analyze"}
                 </div>
                 <div className="w-12 shrink-0"></div>
               </div>
