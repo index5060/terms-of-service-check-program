@@ -22,6 +22,7 @@ import {
   Search,
   HelpCircle,
   Smartphone,
+  Monitor,
   Wifi,
   Battery
 } from "lucide-react";
@@ -84,6 +85,9 @@ export default function Home() {
 
   // 10. 직전 고정 시나리오 상태 백업 (뒤로가기 시 복구용)
   const [lastFixedScenario, setLastFixedScenario] = useState<Scenario>(SCENARIOS[0]);
+
+  // 11. 모바일 앱 / 웹 브라우저 뷰 모드 상태 관리
+  const [viewMode, setViewMode] = useState<'mobile' | 'web'>('mobile');
 
   // 9. LLM 실시간 API 분석 핸들러
   const handleLLMAnalysis = async () => {
@@ -313,28 +317,57 @@ export default function Home() {
             </button>
           </div>
 
-          {/* 초기화 버튼 */}
-          <button 
-            onClick={() => {
-              const initialAgreed: Record<string, boolean> = {};
-              currentScenario.terms.forEach(term => {
-                initialAgreed[term.id] = true;
-              });
-              setAgreedTermIds(initialAgreed);
-              setIsSignupComplete(false);
-              // 커스텀 AI 검사 초기화
-              if (currentScenario.id === "custom") {
-                setCustomAnalysisResult(null);
-                setCustomInputText("");
-                setCustomAnalysisError(null);
-                setCurrentScenario(CUSTOM_SCENARIO);
-              }
-            }}
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            <RefreshCw size={12} />
-            동의 초기화
-          </button>
+          {/* 우측 도구 영역 (뷰 전환기 및 초기화 버튼) */}
+          <div className="flex items-center">
+            {/* 뷰 모드 토글 세그먼트 컨트롤 */}
+            <div className="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200/60 mr-2.5 shrink-0 select-none">
+              <button
+                onClick={() => setViewMode('mobile')}
+                className={`px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  viewMode === 'mobile'
+                    ? "bg-white text-blue-toss shadow-3xs"
+                    : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                <Smartphone size={11} />
+                <span>모바일 앱 뷰</span>
+              </button>
+              <button
+                onClick={() => setViewMode('web')}
+                className={`px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  viewMode === 'web'
+                    ? "bg-white text-blue-toss shadow-3xs"
+                    : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                <Monitor size={11} />
+                <span>웹 브라우저 뷰</span>
+              </button>
+            </div>
+
+            {/* 초기화 버튼 */}
+            <button 
+              onClick={() => {
+                const initialAgreed: Record<string, boolean> = {};
+                currentScenario.terms.forEach(term => {
+                  initialAgreed[term.id] = true;
+                });
+                setAgreedTermIds(initialAgreed);
+                setIsSignupComplete(false);
+                // 커스텀 AI 검사 초기화
+                if (currentScenario.id === "custom") {
+                  setCustomAnalysisResult(null);
+                  setCustomInputText("");
+                  setCustomAnalysisError(null);
+                  setCurrentScenario(CUSTOM_SCENARIO);
+                }
+              }}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <RefreshCw size={12} />
+              동의 초기화
+            </button>
+          </div>
         </div>
       </header>
 
@@ -430,25 +463,51 @@ export default function Home() {
       {/* 2. 메인 화면 구성 (중앙: 가상 스마트폰 디바이스 목업, 우측: 분석기 SDK 대시보드) */}
       <div className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row justify-center items-start gap-8">
         
-        {/* [좌/중앙] 가상 스마트폰 디바이스 목업 (iPhone 스타일) */}
-        <div className="w-full lg:w-[380px] shrink-0 flex justify-center py-4">
-          <div className="relative w-[360px] h-[720px] bg-white border-[10px] border-gray-900 rounded-[50px] shadow-2xl overflow-hidden flex flex-col shrink-0 select-none">
+        {/* [좌/중앙] 가상 디바이스 목업 (모바일 프레임 / 웹 브라우저 프레임 스위칭) */}
+        <div className={`transition-all duration-350 flex justify-center py-4 ${
+          viewMode === 'mobile' 
+            ? "w-full lg:w-[380px] shrink-0" 
+            : "flex-1 min-w-[320px] lg:max-w-3xl"
+        }`}>
+          <div className={`transition-all duration-350 overflow-hidden flex flex-col select-none bg-white ${
+            viewMode === 'mobile'
+              ? "relative w-[360px] h-[720px] border-[10px] border-gray-900 rounded-[50px] shadow-2xl shrink-0"
+              : "relative w-full h-[720px] border border-gray-200 rounded-3xl shadow-xl"
+          }`}>
             
-            {/* 폰 상단 데코레이션 (다이내믹 아일랜드 / 수화기) */}
-            <div className="absolute top-0 left-0 right-0 h-9 bg-transparent z-40 flex justify-between items-center px-6">
-              <span className="text-[11px] font-bold text-gray-600">16:19</span>
-              <div className="w-[100px] h-5 bg-black rounded-full flex items-center justify-center">
-                <span className="w-2.5 h-2.5 rounded-full bg-gray-800 absolute left-[138px]"></span>
+            {/* 상단 기기 프레임 데코레이션 */}
+            {viewMode === 'mobile' ? (
+              /* 폰 상단 데코레이션 (다이내믹 아일랜드 / 수화기) */
+              <div className="absolute top-0 left-0 right-0 h-9 bg-transparent z-40 flex justify-between items-center px-6">
+                <span className="text-[11px] font-bold text-gray-600">16:19</span>
+                <div className="w-[100px] h-5 bg-black rounded-full flex items-center justify-center">
+                  <span className="w-2.5 h-2.5 rounded-full bg-gray-800 absolute left-[138px]"></span>
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-600">
+                  <Wifi size={11} strokeWidth={2.5} />
+                  <Battery size={13} strokeWidth={2.5} />
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 text-gray-600">
-                <Wifi size={11} strokeWidth={2.5} />
-                <Battery size={13} strokeWidth={2.5} />
+            ) : (
+              /* 맥OS 스타일 웹 브라우저 헤더 데코레이션 (이모티콘 자제, 얇은 실선 위주) */
+              <div className="h-9 bg-gray-50 border-b border-gray-150 px-4 flex items-center justify-between z-40 select-none shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+                </div>
+                <div className="bg-white border border-gray-200 text-gray-400 text-[10px] font-semibold py-0.5 px-4 rounded-md w-[240px] text-center truncate select-none shadow-3xs font-mono">
+                  https://guardterms.co.kr/register
+                </div>
+                <div className="w-12 shrink-0"></div>
               </div>
-            </div>
+            )}
 
-            {/* 모바일 앱 바디 콘텐츠 */}
+            {/* 디바이스 바디 콘텐츠 */}
             {!isSignupComplete ? (
-              <div className="flex-1 pt-9 flex flex-col justify-between bg-white h-full">
+              <div className={`flex-1 flex flex-col justify-between bg-white h-full ${
+                viewMode === 'mobile' ? 'pt-9' : 'pt-0'
+              }`}>
                 
                 {/* 앱 상단 헤더 */}
                 <div 
@@ -659,7 +718,7 @@ export default function Home() {
                       className="w-full text-white font-extrabold py-3.5 rounded-xl text-[12px] transition-all shadow-xs active:scale-[0.98] cursor-pointer disabled:opacity-50 hover:opacity-95"
                       style={{ backgroundColor: currentScenario.brandColor }}
                     >
-                      {isAnalyzing ? "AI 분석 분석 중..." : "실시간 AI 약관 심사"}
+                      {isAnalyzing ? "대조 심사 중..." : "실시간 약관 심사 개시"}
                     </button>
                   ) : (
                     <button
@@ -682,7 +741,9 @@ export default function Home() {
               </div>
             ) : (
               /* 모바일 앱 가입 완료 화면 */
-              <div className="flex-1 pt-9 flex flex-col justify-between items-center bg-white h-full p-6">
+              <div className={`flex-1 flex flex-col justify-between items-center bg-white h-full p-6 ${
+                viewMode === 'mobile' ? 'pt-9' : 'pt-4'
+              }`}>
                 <div className="text-center space-y-5 flex-1 flex flex-col justify-center items-center">
                   <div className="w-16 h-16 rounded-full flex items-center justify-center text-white mb-2 shadow-inner" style={{ backgroundColor: currentScenario.brandColor }}>
                     <Check size={32} className="animate-bounce" />
@@ -707,9 +768,11 @@ export default function Home() {
             )}
 
             {/* 가상 아이폰 하단 바 */}
-            <div className="absolute bottom-1.5 left-0 right-0 h-1 flex justify-center z-40">
-              <span className="w-28 h-1 bg-gray-800 rounded-full"></span>
-            </div>
+            {viewMode === 'mobile' && (
+              <div className="absolute bottom-1.5 left-0 right-0 h-1 flex justify-center z-40">
+                <span className="w-28 h-1 bg-gray-800 rounded-full"></span>
+              </div>
+            )}
           </div>
         </div>
 
